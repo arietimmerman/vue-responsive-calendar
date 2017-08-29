@@ -17,6 +17,8 @@ TODO:
 
 ## Usage
 
+Install with `npm install vue-responsive-calendar`.
+
 ~~~.html
 <div id="app">
 
