@@ -1,0 +1,855 @@
+<template>
+<div class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase()]">
+
+	<div class="d-flex justify-content-between align-items-center menu">
+		
+		<!-- Buttons top left -->
+		<div>
+			<a class="btn btn-secondary btn-sm" @click="showToday"> 
+				<i class="fa fa-calendar" aria-hidden="true"></i> 
+			</a>
+
+			<div class="btn-group" role="group" aria-label="Basic example">
+
+				<a class="btn btn-secondary btn-sm ml-1" @click="prev"><i class="fa fa-chevron-left" aria-hidden="true"></i></a>
+				<a class="btn btn-secondary btn-sm" @click="next"><i class="fa fa-chevron-right" aria-hidden="true"></i></a>
+
+			</div>
+
+			<p class="date-range ml-2 hidden show-m-size">{{ rangeToString(fromDate, toDate) }}</p>
+
+		</div>
+
+		<!-- Buttons top right -->
+		<div>
+
+			<button class="btn btn-secondary btn-sm mr-1" type="button" v-if="Object.keys(calendarInformation).length > 0" @click="showCalendarPicker = true">
+						<i class="fa fa-bars" aria-hidden="true"></i>
+			</button>
+
+			<div class="btn-group pull-right" role="group" aria-label="Basic example">
+				<a class="btn btn-secondary btn-sm" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">Dag</span></a>
+				<a class="btn btn-secondary btn-sm" @click="showWeek">Week</a>
+				<a class="btn btn-secondary btn-sm" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">4 dagen</span></a>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="month" v-if="template == 'month'">
+
+		<!-- TODO: implement month -->
+
+	</div>
+
+
+	<template v-else>
+		<!-- TODO: consider adding an extra element with a possible scrollbar. Set scrollStart on Vue mounted -->
+		<div class="dayline">
+			<ul>
+
+				<!-- TODO: Always show full week when showing 1 day. Like on IOS -->
+				<li class="top-info" v-for="day in days" v-bind:class="{today: day.isSame(today,'day'), selected: day.isSame(dateActive,'day') } ">
+
+					<a class="d-flex mt-1 justify-content-center" @click="setDateRange(day,day)">
+						<span class="p-0 text-center">{{ day.format('dd') }}</span>
+						<span class="day p-0 text-center">{{ day.format('D') }}</span>
+					</a>
+
+				</li>
+
+			</ul>
+		</div>
+
+		<div class="calendar d-flex flex-row" ref="calendar">
+
+			<div class="timeline">
+				<ul class="d-flex justify-content-around flex-column">
+					<li v-for="timeItem in allTimes()">
+						<span>{{ timeItem }}</span>
+					</li>
+				</ul>
+			</div>
+
+			<div class="events" v-bind:style="{ backgroundImage: backgroundImage, backgroundPosition: backgroundPosition }">
+
+				<ul>
+					<li v-for="(item, key) in currentAgendaItems" class="events-group" v-bind:class="{today: key == today}" v-bind:style="{ width : (100.0/Object.keys(currentAgendaItems).length) + '%'}">
+
+						<ul>
+							<template v-for="event in item">
+
+								<li v-bind:style="[event.style, eventStyleReset]" v-if="getTime(event.dateStart) != null && getTime(event.dateEnd) != null"
+								    class="single-event" data-event="event-1" v-bind:class="event.styleClass">
+									<a href="#0" @click="openModal(event)">
+										<span class="event-date">{{ getTime(event.dateStart) }} - {{ getTime(event.dateEnd) }}</span>
+										<span class="event-name">{{ event.summary ? event.summary : event.item.summary }}</span>
+									</a>
+								</li>
+
+							</template>
+						</ul>
+					</li>
+
+				</ul>
+			</div>
+
+		</div>
+	</template>
+
+	<modal-detail v-if="showModal" @close="showModal = false">
+		<h3 slot="header">{{ currentEvent.summary ? currentEvent.summary : currentEvent.item.summary }}</h3>
+
+		<p slot="body">{{ currentEvent.description }}</p>
+		<span slot="date">{{ getTime(currentEvent.dateStart) }} - {{ getTime(currentEvent.dateEnd) }}</span>
+		<span slot="location">{{ currentEvent.location }}</span>
+
+	</modal-detail>
+
+	<modal-detail v-if="showCalendarPicker" @close="showCalendarPicker = false">
+
+		<h3 slot="header">Calendars</h3>
+		<span slot="date"></span>
+		<p slot="body">
+
+			<template v-for="calendar in Object.values(calendarInformation)">
+				<div>
+					<input class="checkbox-custom" type="checkbox" :value="calendar.name" :id="calendar.name" v-model="enabledCalendars" /> 
+					<label :style="{color: calendar.color}" :for="calendar.name" class="checkbox-custom-label"><span style="color: #222222;;">{{ calendar.displayName }}</span></label>
+				</div>
+			</template>
+
+		</p>
+
+		<span slot="location"></span>
+	</modal-detail>
+
+
+</div>
+</template>
+
+<script>
+
+import _ from 'lodash';
+import Moment from 'moment';
+import 'moment/locale/nl';
+import {
+	extendMoment
+} from 'moment-range';
+import Modal from './Modal.vue'
+
+const moment = extendMoment(Moment);
+
+moment.locale('nl');
+
+export default {
+	
+	components: {
+		'modal-detail': Modal
+	},
+
+	props: {
+
+		//TODO: introduce start of week
+
+		/**
+ 		* @property {Array.<{dateStart: Date, dateEnd: Date, styleClass: String, summary: String, description: String, location: String}>} events
+ 		*/
+		events: {
+			type: Array,
+			default: function(){ return []; }
+		},
+
+		/**
+		 * @param {('xs'|'s'|'m','l')} maxSize - Sets the maximum size
+		 */
+		maxSize: {
+			type: String,
+			default: 'l'
+		},
+
+		/**
+		 * @param number hourStart - specifices the first hour of the day that should be visible
+		 */
+		hourStart: {
+			type: Number,
+			default: 0
+		},
+
+		/**
+		 * @param number hourStart - specifices the day's last hour that should be visble
+		 */
+		hourEnd: {
+			type: Number,
+			default: 24
+		}
+
+	},
+
+	data() {
+		return {
+			
+			//Set to true to show the event details dialog
+			showModal: false,
+
+			//Set to true to show the calendar picker
+			showCalendarPicker: false,
+
+			//Sets the template to use. Currently, only week is supported
+			template: 'week',
+
+			//Automatically populated by default with a map. YYYYMMDD as the object's keys. The values are the events (from this.events).
+			agendaItems: {},
+
+			//Array with elements like {name: String, displayName: String}
+			calendarInformation: [],
+
+			//Sets the calendars that should be enabled
+			enabledCalendars: [],
+
+			dateActive: moment(),
+
+			// First day to show in the current calendar view
+			fromDate: null,
+
+			// Last day to show in the current calendar view
+			toDate: null,
+
+			// A range starting from this.fromDate to this.toDate
+			currentRange: null,
+
+			// Filled with the event selected. Used in the event detail modal.
+			currentEvent: null,
+
+			today: moment(),
+
+			// 
+			timelineStart: null,
+			timelineEnd: null,
+			timelineDuration: null,
+			timelineSlotDuration: null,
+
+			// List of moment js objects
+			days: [],
+
+			// Allows overriding event styles
+			eventStyleReset: {
+				//TODO: set height and width to something when on mobile ...
+			}
+		}
+	},
+
+	watch: {
+
+	},
+
+	computed: {
+
+		// Returns an array of background images, used for the timelines
+		backgroundImage: function () {
+			
+			return Array(this.hourEnd - this.hourStart -1).fill('url(\'' + CALENDAR_PUBLIC_PATH + '/line.svg\')').join(', ');
+
+		},
+
+		//returns the background positions, used for the timelines
+		backgroundPosition: function () {
+
+			var repeats = this.hourEnd - this.hourStart;
+
+			var positions = [];
+
+			for (var i = 1; i < repeats; i++) {
+				positions.push('0% ' + (100.0 / repeats) * i + '%');
+			}
+
+			return positions.join(', ');
+		},
+
+		//
+		currentAgendaItems: function () {
+			
+			console.log('enabledCalendars');
+			console.log(Object.values(this.enabledCalendars));
+			// (1) First, load the current agenda items
+			var result = {};
+
+			for (let day of this.currentRange.by('days')) {
+				var r = this.agendaItems[day.format('YYYYMMDD')];
+				
+				result[day.format('YYYYMMDD')] = r ? r : [];
+			}
+
+			var e = result;
+			
+			// (2) Prepare presenting
+			for (var i in e) {
+
+				var j = e[i].length
+
+				while (j--) {
+
+					if (e[i][j].style) {
+						delete e[i][j].dataWidth;
+						delete e[i][j].dataLeft;
+						delete e[i][j].style.width;
+						delete e[i][j].style.left;
+					}else{
+						e[i][j].style = {};
+					}
+
+					e[i][j].ignore = false;
+					e[i][j].style.display = 'block';
+
+					if(Object.keys(this.calendarInformation).length > 0){
+						console.log('has calendar information');
+						if (this.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
+							console.log('ignore a calendar!');
+							e[i][j].ignore = true;
+							e[i][j].style.display = 'none';
+						} else {
+							e[i][j].style.backgroundColor = this.calendarInformation[e[i][j].calendarName].color;
+						}
+					}else{
+						console.log('no calendar information');
+						console.log(this.calendarInformation);
+					}
+
+				}
+
+			}
+
+			for (var i in e) {
+				this.fixWidthForEventGroup(e[i].filter(function(e) { console.log('ignore: ' + e.ignore); return !e.ignore; }));
+
+				for (var j in e[i].filter(function(e) { console.log('ignore: ' + e.ignore); return !e.ignore; })) {
+
+					this.calculateHeight(e[i][j]);
+				}
+			}
+
+			return e;
+
+		}
+	},
+
+	created() {
+
+		this.timelineSlotDuration = this.getScheduleTimestamp('7:30') - this.getScheduleTimestamp('07:00');
+		this.timelineStart = this.getScheduleTimestamp(('0' + this.hourStart).slice(-2) + ':00');
+
+		this.timelineEnd = this.getScheduleTimestamp(('0' + this.hourEnd).slice(-2) + ':00');
+
+		this.timelineDuration = this.timelineEnd - this.timelineStart;
+
+		if (this.dateStart != null) {
+			this.dateActive = moment(this.dateStart, 'YYYY-MM-DD');
+		}
+
+		this.showWeek();
+
+	},
+	mounted() {
+
+		var objSchedulesPlan = [],
+			windowResize = false;
+
+		var parent = this;
+
+		this.setScrollTop();
+
+		window.addEventListener('resize', function () {
+			parent.resize();
+		});
+
+		var eventsGrouped = {};
+
+		for (let day of this.currentRange.by('days')) {
+			eventsGrouped[day.format('YYYYMMDD')] = [];
+		}
+
+		this.events.forEach(function(event){
+			var date = moment(event.dateStart).format('YYYYMMDD');
+			eventsGrouped[date].push(event);
+			
+		});
+
+		this.agendaItems = eventsGrouped;
+
+
+
+	},
+
+	methods: {
+
+		getCalendarDisplayName: function (name) {
+			return name.replace('\\','');
+		},
+
+		setScrollTop: function () {
+			this.$refs.calendar.scrollTop = this.$refs.calendar.scrollHeight * 0.26;
+		},
+
+		showDropDown: function () {
+			this.$refs.dropdownmenu.style.display = this.$refs.dropdownmenu.style.display == 'block' ? 'none' : 'block';
+		},
+
+		rangeToString: function (fromDate, toDate) {
+			let result = null;
+
+			if (fromDate.isSame(toDate, 'day')) {
+				result = fromDate.format('MMM D, YYYY');
+			} else if (fromDate.isSame(toDate, 'month')) {
+				result = fromDate.format('MMM D') + ' - ' + toDate.format('D, YYYY');;
+			} else {
+				result = fromDate.format('MMM D') + ' - ' + toDate.format('MMM D, YYYY');;
+			}
+
+			result = result.replace('.', '');
+			result = result.charAt(0).toUpperCase() + result.substr(1);
+
+			return result;
+
+		},
+
+		allTimes: function () {
+			var times = [];
+
+			for (var i = this.hourStart; i < this.hourEnd; i++) {
+				times.push(i + 'u');
+				times.push(i + ':30');
+			}
+
+			return times;
+		},
+
+		resize: _.debounce(function () {
+
+			this.setScrollTop();
+
+		}, 500),
+
+		calculateHeight: function (event) {
+
+			if (event.dateStart && event.dateEnd) {
+
+				var start = this.getScheduleTimestamp(moment(event.dateStart).format('HH:mm'));
+				var duration = this.getScheduleTimestamp(moment(event.dateEnd).format('HH:mm')) - start;
+
+				var eventTop = 100.0 * (start - this.timelineStart) / this.timelineDuration;
+				var eventHeight = 100.0 * duration / this.timelineDuration;
+
+				if (!event.style) {
+					event.style = {};
+				}
+
+				event.styleClass = [event.calendarName];
+
+				event.style.height = (eventHeight) + '%';
+				event.style.top = (Math.max(0, eventTop)) + '%';
+
+			} else {
+
+			}
+		},
+
+		getScheduleTimestamp: function (time) {
+
+			if (!time) return 0.001;
+
+			//accepts hh:mm format - convert hh:mm to time in minutes
+			time = time.replace(/ /g, '');
+			var timeArray = time.split(':');
+			var timeStamp = parseInt(timeArray[0]) * 60 + parseInt(timeArray[1]);
+
+			return timeStamp;
+		},
+
+		setDateRange: function (fromDate, toDate) {
+
+			console.log('set date range!');
+
+			this.fromDate = fromDate;
+			this.toDate = toDate;
+
+			this.currentRange = moment.range(this.fromDate, this.toDate);
+
+
+			var days = Array.from(this.currentRange.by('day'));
+
+			if (days.length == 1) {
+				this.dateActive = fromDate;
+				days = Array.from(moment.range(fromDate.clone().startOf('week'), fromDate.clone().endOf('week')).by('days'));;
+			}
+
+			this.days = days;
+
+			console.log('days length: ' + days.length);
+			for (var day in days) {
+				console.log('day: ' + day);
+			}
+
+			this.$emit('newDateRange', fromDate, toDate);
+
+			this.loadDateRange(fromDate, toDate);
+
+		},
+
+		loadDateRange: function (fromDate, toDate) {
+			//dummy method that may be overridden
+
+			// look in agendaItems
+
+		},
+
+		showToday: function () {
+			this.template = 'week';
+			//var today = moment();
+			this.dateActive = this.today.clone();
+
+			var size = this.currentRange.diff('days');
+
+			if (size == 6) {
+				this.setDateRange(this.today.clone().startOf('week'), this.today.clone().endOf('week'));
+			} else {
+				this.setDateRange(this.today, moment().add(size, 'day'));
+			}
+
+		},
+
+		showOneDay: function () {
+			this.template = 'week';
+			this.setDateRange(this.dateActive, this.dateActive);
+
+		},
+
+		showFourDay: function () {
+			this.template = 'week';
+			this.setDateRange(this.dateActive, this.dateActive.clone().add(3, 'day'));
+
+		},
+
+		showWeek: function () {
+
+			this.template = 'week';
+			this.setDateRange(this.dateActive.clone().startOf('week'), this.dateActive.clone().endOf('week'));
+
+		},
+
+		showMonth: function () {
+
+			this.template = 'month';
+
+			this.setDateRange(this.dateActive.clone().startOf('month'), this.dateActive.clone().endOf('month'));
+
+		},
+
+		prev: function () {
+
+			//TODO: calculate current range size
+			//const range = moment.range(parent.fromDate, parent.toDate);
+			var size = this.currentRange.diff('days') + 1;
+
+			this.dateActive = this.dateActive.clone().add(-size, 'day');
+
+			this.setDateRange(this.fromDate.clone().add(-size, 'day'), this.toDate.clone().add(-size, 'day'));
+		},
+
+		next: function () {
+
+			//TODO: calculate current range size
+			//const range = moment.range(parent.fromDate, parent.toDate);
+
+			var size = this.currentRange.diff('days') + 1;
+
+			this.dateActive = this.dateActive.clone().add(size, 'day');
+
+			this.template = 'week';
+
+			this.setDateRange(this.fromDate.clone().add(size, 'day'), this.toDate.clone().add(size, 'day'));
+		},
+
+		getTime: function (date) {
+			console.log('getTime');
+			console.log(date);
+			if (date == null) return null;
+
+			console.log(moment(date).format('HH:mm'));
+			return moment(date).format('HH:mm');
+
+		},
+
+		getDay: function (date, format) {
+			//01-05-2016
+			//20170702
+			return date ? moment(date, 'YYYYMMDD').format(format) : null;
+		},
+
+		mq: function () {
+			var element = $('.calendar');
+
+			return window.getComputedStyle(element.get(0), '::before').getPropertyValue('content').replace(/["']/g, '');
+		},
+
+		openModal: function (event) {
+
+			this.currentEvent = event;
+
+			this.showModal = true;
+
+			//TODO: find a proper way to open a modal!
+
+
+		},
+
+		fixWidthForEventGroup: function (eventGroup) {
+
+			if (eventGroup == null) return;
+
+			var self = this;
+			var events = eventGroup;
+
+			var overLapSets = [];
+
+			events.forEach(function (event, index) {
+
+				var start = self.getScheduleTimestamp(moment(event.dateStart).format('HH:mm'));
+				var end = self.getScheduleTimestamp(moment(event.dateEnd).format('HH:mm'));
+
+				var overLappingElements = [event];
+
+				var sets = self.calculateOverlap(start, end, events, index + 1);
+				
+				sets.forEach(function (currentValue, index, array) {
+					var set = overLappingElements.concat(currentValue);
+					overLapSets.push(set);
+				});
+				
+
+
+			});
+
+			overLapSets.sort(function (a, b) {
+
+				if (a.length > b.length) {
+					return -1;
+				} else {
+					return 1;
+				}
+
+			});
+
+			overLapSets.forEach(function (currentValue, index, array) {
+
+				var width = 100.0 / currentValue.length;
+
+				var usedRanges = [];
+				var usedWidth = 0;
+
+				//Calculate all used ranges in a certain overlap set
+				currentValue.forEach(function (currentValue, index, array) {
+
+					var left = currentValue.dataLeft;
+					var width = currentValue.dataWidth;
+
+					if (typeof left !== typeof undefined && left !== false) {
+						usedRanges.push([parseFloat(left), parseFloat(left) + parseFloat(width)]);
+					}
+
+				});
+
+				// sort ranges in order of occurences, left to right
+				usedRanges.sort(function (a, b) {
+					if (a[0] < b[0]) {
+						return -1;
+					} else {
+						return 1;
+					}
+
+				});
+
+				var freeRanges = [];
+
+				//find all free ranges
+				for (var i = 0; i < usedRanges.length; i++) {
+
+					var previous = (i == 0) ? 0.0 : usedRanges[i - 1][1];
+
+					var next = usedRanges[i][0];
+
+					if ((next - previous) > 0.0) {
+						freeRanges.push([previous, next]);
+					}
+
+				}
+
+				if (usedRanges.length > 0) {
+					var previous = usedRanges[usedRanges.length - 1][1];
+					var next = 100.0;
+
+					if ((next - previous) > 0.0) {
+						freeRanges.push([previous, next]);
+					}
+				} else {
+					freeRanges.push([0.0, 100.0]);
+				}
+
+				// verdeel de ranges in currentValue.lenght stukken waarbij het grootste stuk niet groter is dan 2x het kleinste stuk
+				var elementsThatNeedSpace = [];
+
+				currentValue.forEach(function (currentValue, index, array) {
+
+					var attr = currentValue.dataWidth;
+
+					if (typeof attr === typeof undefined || attr === false) {
+
+						elementsThatNeedSpace.push(currentValue);
+
+					} else {
+
+						//this element has already been placed
+
+					}
+				});
+
+				//Calculate the number of elements that still require space
+				var spacesNeeded = parseFloat(elementsThatNeedSpace.length);
+
+				//If no element needs space, continue with the next overlap set
+				if (spacesNeeded == 0) {
+					return;
+				}
+
+				var spaces = [];
+
+				//there are 2 or more spaces to populate 2 or more ranges
+
+				// sort free ranges by size, biggest first
+				var rangeCandidates = freeRanges.sort(function (a, b) {
+
+					if (a[1] - a[0] > b[1] - b[0]) {
+						return -1;
+					} else {
+						return 1;
+					}
+
+				});
+
+				//find the largest element
+				var largestSize = rangeCandidates[0][1] - rangeCandidates[0][0];
+
+				//calculate the minimum size of an element, it should not be smaller then necessary
+				var minimumSize = largestSize / spacesNeeded;
+				var totalSize = 0;
+
+				//filter out very small free spaces
+				rangeCandidates = rangeCandidates.filter(function (value) {
+
+					var elementSize = value[1] - value[0];
+
+					if (elementSize >= minimumSize) {
+						totalSize += elementSize;
+						return true;
+					} else {
+						return false;
+					}
+
+				});
+
+				//find the smallest range left
+				var smallestRange = rangeCandidates[rangeCandidates.length - 1];
+
+				//And ensure is not larger then this smallest range
+				var elementSize = Math.min(smallestRange[1] - smallestRange[0], totalSize / spacesNeeded)
+
+				//loop over the range candidates, start with the smallest
+				rangeCandidates.reverse().forEach(function (e, index, array) {
+
+					//how much space do we have?
+					var rangeSize = (e[1] - e[0]);
+
+					//calculate how much elements this space should contain
+					var elementsInRange = 0;
+
+					if (index != (array.length - 1)) {
+						elementsInRange = Math.floor(rangeSize / elementSize);
+					} else {
+						elementsInRange = spacesNeeded;
+					}
+
+					var width = rangeSize / elementsInRange;
+
+					for (var i = 0.0; i < elementsInRange; i++) {
+						spaces.push([e[0] + i * (width), e[0] + (i + 1) * (width)]);
+					}
+
+					spacesNeeded = spacesNeeded - elementsInRange;
+
+				});
+
+				elementsThatNeedSpace.forEach(function (currentValue, index) {
+
+					if (spaces[index]) {
+						var left = spaces[index][0];
+						var width = spaces[index][1] - spaces[index][0];
+
+						currentValue.dataWidth = width;
+						currentValue.dataLeft = left;
+
+						if (!currentValue.style) {
+							currentValue.style = {};
+						}
+
+						currentValue.style.width = width + '%';
+						currentValue.style.left = left + '%';
+
+					}
+
+				});
+
+			});
+		},
+
+		calculateOverlap: function (start, end, events, index) {
+
+			var result = [];
+
+			var max = 0;
+
+			for (var i = index; i < events.length; i++) {
+
+				var other = events[i];
+
+				var otherStart = this.getScheduleTimestamp(this.getTime(other.dateStart));
+				var otherEnd = this.getScheduleTimestamp(this.getTime(other.dateEnd));
+
+				var overlapStart = Math.max(start, otherStart);
+				var overLapEnd = Math.min(end, otherEnd);
+
+				if (start < otherEnd && otherStart < end) {
+
+					var overLappingElements = [other];
+
+					var overlapSets = [];
+
+					overlapSets = overlapSets.concat(this.calculateOverlap(overlapStart, overLapEnd, events, i + 1));
+
+					overlapSets.forEach(function (currentValue, index, array) {
+						result.push(overLappingElements.concat(currentValue));
+					});
+
+					result.push(overLappingElements);
+
+				}
+
+			}
+
+			return result;
+
+		}
+
+	}
+
+}
+
+</script>

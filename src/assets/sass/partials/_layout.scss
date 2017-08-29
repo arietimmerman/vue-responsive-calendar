@@ -1,0 +1,42 @@
+// breakpoints
+
+
+//FIXME: create a mobile layout and use this
+$S:     400px;   
+$M:     700px;     
+$L:     1300px;     
+
+// media queries
+
+@mixin MQ($canvas) {
+  @if $canvas == S {
+   @media only screen and (min-width: $S) { 
+      @at-root .max-size-s#{&}, .max-size-m#{&}, .max-size-l#{&} {
+      @content; 
+     }
+    } 
+  }
+  @else if $canvas == M {
+   @media only screen and (min-width: $M) { 
+    @at-root .max-size-m#{&}, .max-size-l#{&} {
+     @content; 
+    }
+    } 
+  }
+  @else if $canvas == L {
+   @media only screen and (min-width: $L) { 
+    @at-root .max-size-l#{&} {  
+     @content; 
+    } 
+
+  }
+}
+}
+
+// super light grid system
+
+@mixin column($percentage, $float-direction:left) {
+  width: 100% * $percentage;
+  float: $float-direction;
+}
+

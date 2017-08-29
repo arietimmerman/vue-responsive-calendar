@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>vue-responsive-calendar</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <link rel="stylesheet" type="text/css" href="/dist/calendar.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+    <style type="text/css">
+  html, body, #app{
+    height: 100%;
+  }
+
+  /* #app{
+    height: 400px;
+    width: 400px;
+    border-style:solid;
+    border-width: 1px;
+    border-color: blue;
+  } */
+</style>
+  </head>
+  <body>
+
+    <div id="app">
+
+      <responsive-calendar-ical max-size="l" :ical="'/samples/resources/calendaritems.ics'"></responsive-calendar-ical>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+    <script src="/dist/calendar.min.js"></script>
+
+    <script>
+const app = new Vue({
+    el: '#app'
+});
+    </script>
+
+  </body>
+</html>

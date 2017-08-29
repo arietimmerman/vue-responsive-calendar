@@ -1,0 +1,326 @@
+	// Note: we use Autoprefixer to add vendor prefixes to our CSS -> https://github.com/postcss/autoprefixer
+	@import './partials/variables'; // colors, fonts etc...
+	@import './partials/mixins'; // custom mixins
+	@import './partials/layout'; // responsive grid and media queries
+	
+	.calendar-container {
+		color: $text-color;
+		display: flex;
+		flex-direction: column;
+
+		&.container{
+			padding-left: 0px;
+			padding-right: 0px;
+		}
+
+		.hidden{
+			display: none;
+		}
+
+		.menu{
+			// border-bottom-style: solid;
+			// border-bottom-width: 1px;
+			// border-bottom-color: $border-color;
+			padding: 5px 0px 5px 0px;
+			
+		}
+
+		@include MQ(M) {
+			.hidden-m-size{
+				display: none;
+			}
+
+			.show-m-size{
+				display: initial;
+			}
+		}
+
+		font: {
+			size: $font-size-default;
+			family: $primary-font; // variables inside partials > _variables.scss
+		} // Shows days at the top
+		.dayline {
+			width: 100%;
+			height: auto;
+			position: relative;
+			clear: both;
+			margin-top: 5px;
+			margin-bottom: 3px;
+			
+			ul {
+				display: flex;
+				margin: 0px;
+				padding: 0px;
+				margin-left: $timeline-width;
+
+				@include MQ(M) {
+					margin-left: $timeline-width; //timeline size
+				}
+
+				li {
+					text-transform: lowercase;
+					
+					list-style-type: none;
+					flex-grow: 1;
+					
+					
+					span{ 
+						font-size: $font-size-x-small;
+						border-radius: 50%;
+
+						@include MQ(M) {
+							font-size: $font-size-small;
+						}
+					}
+
+					span.day {
+						width: 28px;
+						height: 28px;
+						line-height: 28px;
+						font-size: $font-size-small;
+					}
+
+					
+					&.selected:not(.today) span.day{
+						color:white;
+						background-color: grey;
+					}
+
+					&.today span.day{
+						background-color: red;
+						
+						color: white;
+						font-weight: bold;
+
+						@include font-smoothing;
+						
+					}
+
+					a {
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+						text-decoration: none;
+						color: $text-color;
+
+						&:hover span.day{
+							background-color: grey;
+							color: white;
+							font-weight: bold;
+						}
+
+						@include MQ(M) {
+							flex-direction: row;
+							
+							span.day{
+								margin-left: 5px;
+							}
+							
+						}
+					}
+					
+					
+				}
+			}
+		}
+		.calendar {
+			
+			flex-grow: 1;
+
+			box-sizing: border-box;
+			position: relative;
+			margin: 0px;
+			width: 100%;
+			height: 100%;
+			overflow: scroll;
+
+			ul li {
+				list-style-type: none;
+			}
+			a {
+				color: $link-color;
+				text-decoration: none;
+			}
+			&::before {
+				/* never visible - this is used in js to check the current MQ */
+				content: 'mobile';
+				display: none;
+			}
+			@include MQ(M) {
+				@include clearfix;
+				&::before {
+					content: 'desktop';
+				}
+			}
+			.timeline {
+
+				//change the line below to none to hide the timeline on small screens
+				display: block;
+				font-size: $font-size-small;
+
+				height: $calendar-zoom-xs;
+
+				background-color: white;
+				text-align:right;
+				width: $timeline-width;
+
+				ul {
+					padding-left: 0px;
+					height: 100%;
+					margin: 0px;
+
+					li {
+						line-height: 0px;
+						flex-grow: 1;
+						position: relative;
+						right: 5px;
+
+						&:nth-of-type(2n) span {
+							display: none;
+						}
+
+						&:first-child{
+							color: transparent;
+						}
+
+					}
+
+				}
+				@include MQ(M) {
+					height: $calendar-zoom;
+					display: block;
+					position: relative;
+					top: 0;
+					left: 0;
+					width: 40px;
+					li {
+						&:nth-of-type(2n) span {
+							display: none;
+						}
+					}
+				}
+				@include MQ(L) {
+					li {
+						// &:nth-of-type(2n) span,
+						// span {
+						// 	display: inline-block;
+						// 	transform: translateY(-50%);
+						// }
+					}
+				}
+			}
+			.events {
+				position: relative;
+				z-index: 1;
+				height: $calendar-zoom-xs;
+				flex-grow: 1;
+				width: 100%;
+
+				@include MQ(M) {
+					height: $calendar-zoom;
+				}
+
+
+			background-repeat: repeat-x;
+			background-size: auto auto;
+
+				ul {
+					white-space: nowrap;
+					padding-left: 0px;
+					height: 100%;
+					margin: 0px;
+					display: flex;
+					
+					.events-group {
+						height: 100%;
+						display: inline-block;
+						float: none;
+						border: 1px solid $border-color;
+						position: relative;
+						/* reset style */
+						margin-bottom: 0;
+						&:not(:first-of-type) {
+							border-left-width: 0;
+						}
+						&.today {
+							background-color: rgba(230, 230, 230, 0.5);
+						}
+						&>ul {
+							position: relative;
+							padding: 0;
+							display: block;
+							
+							.single-event {
+								white-space: normal;
+								word-break: break-all;
+								overflow: hidden;
+								background: $event-color-1;
+								position: absolute;
+								z-index: 3;
+								/* top position and height will be set using js */
+								width: calc(100% + 2px);
+								left: -1px;
+								box-shadow: 0 10px 20px rgba(#000, .1), inset 0 -3px 0 rgba(#000, .2);
+								/* reset style */
+								flex-shrink: 1;
+								height: auto;
+								max-width: none;
+								margin-right: 0;
+								a {
+									padding: 4px;
+									position: absolute;
+									left: 0px;
+									top: 0px;
+									display: block;
+									width: 100%;
+									height: 100%;
+								}
+								&:hover {
+									background: lighten($event-color-1, 5%);
+								}
+								.event-name,
+								.event-date {
+									display: block;
+									color: rgb(30,30,30);
+									font-weight: normal;
+									white-space: nowrap;
+									@include font-smoothing;
+									font-size: $font-size-event;
+									opacity: .7;
+									line-height: 1.2em;
+									margin-bottom: .2em;
+								}
+								.event-name {
+									@include MQ(L) {
+										font-size: $font-size-small;
+									}
+								}
+								
+								&.calendar-de_Verbinding_CGKv_Samenwerkingsgemeente,
+								&.calendar-de_Verbinding_CGKv_Samenwerkingsgemeente .header-bg {
+									background: $event-color-2;
+								}
+								&.calendar-de_Verbinding_CGKv_Samenwerkingsgemeente:hover {
+									background: lighten($event-color-2, 5%);
+								}
+								&.calendar-Kerkzaal,
+								&.calendar-Kerkzaal .header-bg {
+									background: $event-color-3;
+								}
+								&.single-event.calendar-Kerkzaal:hover {
+									background: lighten($event-color-3, 5%);
+								}
+								&.single-event[data-event="event-4"],
+								&.single-event[data-event="event-4"] .header-bg {
+									background: $event-color-4;
+								}
+								&.single-event[data-event="event-4"]:hover {
+									background: lighten($event-color-4, 5%);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>vue-responsive-calendar</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" type="text/css" href="/dist/calendar.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+    crossorigin="anonymous">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+    crossorigin="anonymous">
+
+  <style type="text/css">
+    html,
+    body,
+    #app {
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="app">
+
+    <responsive-calendar max-size="l" :events="events"></responsive-calendar>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+  <script src="/dist/calendar.min.js"></script>
+  <script>
+var today = new Date();
+
+const app = new Vue({
+
+  el: '#app',
+  data: {
+    events: [{
+        dateStart: new Date(today.getTime() + (21.5 * 60 * 60 * 1000)),
+        dateEnd: new Date(today.getTime() + (22.5 * 60 * 60 * 1000)),
+        styleClass: null,
+        summary: 'Dit is een test',
+        description: 'test',
+        location: 'geen idee'
+      },
+      {
+        dateStart: new Date(today.getTime() + (21 * 60 * 60 * 1000)),
+        dateEnd: new Date(today.getTime() + (22 * 60 * 60 * 1000)),
+        styleClass: null,
+        summary: 'Dit is een test',
+        description: 'test',
+        location: 'geen idee'
+      },
+      {
+        dateStart: new Date(today.getTime() + (20.7 * 60 * 60 * 1000)),
+        dateEnd: new Date(today.getTime() + (23 * 60 * 60 * 1000)),
+        styleClass: null,
+        summary: 'Dit is een test',
+        description: 'test',
+        location: 'geen idee'
+      },
+      {
+        dateStart: new Date(today.getTime()),
+        dateEnd: new Date(today.getTime() + 60 * 60 * 1000),
+        styleClass: null,
+        summary: 'Dit is een test',
+        description: 'test',
+        location: 'geen idee'
+      }
+
+    ]
+
+  }
+});
+  </script>
+
+</body>
+
+</html>

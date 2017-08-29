@@ -1,0 +1,31 @@
+// colors
+
+$event-color-1: #577F92; // Smalt Blue
+$event-color-2: #443453; // Martinique
+$event-color-3: #A2B9B2; // Edward
+$event-color-4: #f6b067; // Rajah
+
+$text-color: #222222;
+$border-color: #EAEAEA;
+$bg-color: white;
+$link-color: $event-color-3;
+
+$font-size-default: 1rem;
+$font-size-small: 0.9rem; 
+$font-size-x-small: 0.7rem;
+$font-size-event: 0.8rem; 
+
+// fonts 
+
+$primary-font: 'Source Sans Pro', sans-serif;
+
+//colum number
+
+$columns-number: 7;
+$row-height: 20px;
+$top-row-height: 30px;
+
+$calendar-zoom: 170%;
+$calendar-zoom-xs: 250%;
+
+$timeline-width: 40px;
