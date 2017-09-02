@@ -4,7 +4,7 @@ import ResponsiveCalendar from './ResponsiveCalendar.vue';
 
 const IcalExpander = require('ical-expander');
 import Moment from 'moment';
-import 'moment/locale/nl';
+
 import { extendMoment } from 'moment-range';
 
 const moment = extendMoment(Moment);
@@ -13,7 +13,7 @@ var VueResource = require('vue-resource');
 
 Vue.use(VueResource);
 
-let calendarColors = ['#4390BC','#68A7CA','#8DBDD8','#B2D3E6','#D8E9F3','#AFC8CF','#BAD3DA','#7BC0DD'];
+let calendarColors = ['#F37338','#FDB632','#4390BC','#68A7CA','#8DBDD8','#B2D3E6','#D8E9F3','#AFC8CF','#BAD3DA','#7BC0DD'];
 
 export default {
 	    

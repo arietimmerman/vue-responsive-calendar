@@ -1,7 +1,7 @@
 {
   "name": "vue-responsive-calendar",
   "description": "A responsive calendar with Vue",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Arie Timmerman",
   "private": false,
   "main": "dist/calendar.min.js",
@@ -15,7 +15,8 @@
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "moment-range": "^3.0.3",
-    "vue-resource": "^1.3.4"
+    "vue-resource": "^1.3.4",
+    "vue-template-compiler": "^2.3.3"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",

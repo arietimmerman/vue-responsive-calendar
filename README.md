@@ -1,19 +1,8 @@
-# vue-responsive-calendar
+# Responsive Calendar for Vue.js
 
 > A responsive calendar with Vue
 
-I was looking for a responsive calendar but couldn't find one that fit my needs. That's why I 
-created this. A responsive calendar written in ES6 using Vue.
-
 ![screenshot](screenshot.png "Screenshot of vue-responsive-calendar in action")
-
-TODO:
-
-* Multi-language support
-* Improve design
-* Increasing performance even more
-* More samples
-* Documentation 
 
 ## Usage
 

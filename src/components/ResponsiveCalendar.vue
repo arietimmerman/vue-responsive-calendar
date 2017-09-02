@@ -6,7 +6,7 @@
 		<!-- Buttons top left -->
 		<div>
 			<a class="btn btn-secondary btn-sm" @click="showToday"> 
-				<i class="fa fa-calendar" aria-hidden="true"></i> 
+				<i class="fa fa-calendar-check-o" aria-hidden="true"></i>
 			</a>
 
 			<div class="btn-group" role="group" aria-label="Basic example">
@@ -28,9 +28,9 @@
 			</button>
 
 			<div class="btn-group pull-right" role="group" aria-label="Basic example">
-				<a class="btn btn-secondary btn-sm" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">Dag</span></a>
-				<a class="btn btn-secondary btn-sm" @click="showWeek">Week</a>
-				<a class="btn btn-secondary btn-sm" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">4 dagen</span></a>
+				<a class="btn btn-secondary btn-sm" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">{{ i18n.day }}</span></a>
+				<a class="btn btn-secondary btn-sm" @click="showWeek">{{ i18n.week }}</a>
+				<a class="btn btn-secondary btn-sm" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">{{ i18n.days4 }}</span></a>
 			</div>
 
 		</div>
@@ -132,15 +132,13 @@
 
 import _ from 'lodash';
 import Moment from 'moment';
-import 'moment/locale/nl';
+
 import {
 	extendMoment
 } from 'moment-range';
 import Modal from './Modal.vue'
 
 const moment = extendMoment(Moment);
-
-moment.locale('nl');
 
 export default {
 	
@@ -158,6 +156,11 @@ export default {
 		events: {
 			type: Array,
 			default: function(){ return []; }
+		},
+
+		i18n: {
+			type: Object,
+			default: function(){ return {day: 'Day',week:'Week',days4:'4 Days'}; }
 		},
 
 		/**
@@ -268,7 +271,6 @@ export default {
 
 		//
 		currentAgendaItems: function () {
-			
 			console.log('enabledCalendars');
 			console.log(Object.values(this.enabledCalendars));
 			// (1) First, load the current agenda items
@@ -364,19 +366,18 @@ export default {
 
 		var eventsGrouped = {};
 
-		for (let day of this.currentRange.by('days')) {
-			eventsGrouped[day.format('YYYYMMDD')] = [];
-		}
-
 		this.events.forEach(function(event){
 			var date = moment(event.dateStart).format('YYYYMMDD');
+
+			if(!eventsGrouped[date]){
+				eventsGrouped[date] = [];
+			}
+			
 			eventsGrouped[date].push(event);
 			
 		});
 
 		this.agendaItems = eventsGrouped;
-
-
 
 	},
 
