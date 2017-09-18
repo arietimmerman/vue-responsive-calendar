@@ -8,6 +8,11 @@
 		display: flex;
 		flex-direction: column;
 
+		.btn.btn-calendar{
+			background-color: white;
+			color: #1e1e1e;
+		}
+
 		&.container{
 			padding-left: 0px;
 			padding-right: 0px;

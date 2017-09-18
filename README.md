@@ -6,16 +6,20 @@
 
 ## Usage
 
-Install with `npm install vue-responsive-calendar`.
-
 ~~~.html
+<html>
+<head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+<script src="/dist/calendar.min.js"></script>
+</head>
+<body>
+
 <div id="app">
 
     <responsive-calendar max-size="l" :events="events"></responsive-calendar>
 
 </div>
-
-<script src="/dist/calendar.min.js"></script>
 
 <script>
 var today = new Date();
@@ -37,14 +41,9 @@ const app = new Vue({
   }
 });
 </script>
+</body>
+</html>
 ~~~
-
-## Features
-
-* Responsive
-* Show full week, 4 days, or 1 day per page.
-* Prevents events from overlapping
-* Jump to today
 
 ## Build Setup
 
@@ -54,5 +53,9 @@ npm install
 
 # build for production with minification
 npm run build
+
+# develop
+npm run dev
+
 ```
 

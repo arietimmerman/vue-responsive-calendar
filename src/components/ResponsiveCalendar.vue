@@ -1,3 +1,7 @@
+<!--
+The responsive calendar component for vue.js
+-->
+
 <template>
 <div class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase()]">
 
@@ -5,14 +9,14 @@
 		
 		<!-- Buttons top left -->
 		<div>
-			<a class="btn btn-secondary btn-sm" @click="showToday"> 
+			<a class="btn btn-secondary btn-calendar btn-sm" @click="showToday"> 
 				<i class="fa fa-calendar-check-o" aria-hidden="true"></i>
 			</a>
 
 			<div class="btn-group" role="group" aria-label="Basic example">
 
-				<a class="btn btn-secondary btn-sm ml-1" @click="prev"><i class="fa fa-chevron-left" aria-hidden="true"></i></a>
-				<a class="btn btn-secondary btn-sm" @click="next"><i class="fa fa-chevron-right" aria-hidden="true"></i></a>
+				<a class="btn btn-secondary btn-calendar btn-sm ml-1" @click="prev"><i class="fa fa-chevron-left" aria-hidden="true"></i></a>
+				<a class="btn btn-secondary btn-calendar btn-sm" @click="next"><i class="fa fa-chevron-right" aria-hidden="true"></i></a>
 
 			</div>
 
@@ -23,14 +27,14 @@
 		<!-- Buttons top right -->
 		<div>
 
-			<button class="btn btn-secondary btn-sm mr-1" type="button" v-if="Object.keys(calendarInformation).length > 0" @click="showCalendarPicker = true">
+			<button class="btn btn-secondary btn-calendar btn-sm mr-1" type="button" v-if="Object.keys(calendarInformation).length > 0" @click="showCalendarPicker = true">
 						<i class="fa fa-bars" aria-hidden="true"></i>
 			</button>
 
 			<div class="btn-group pull-right" role="group" aria-label="Basic example">
-				<a class="btn btn-secondary btn-sm" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">{{ i18n.day }}</span></a>
-				<a class="btn btn-secondary btn-sm" @click="showWeek">{{ i18n.week }}</a>
-				<a class="btn btn-secondary btn-sm" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">{{ i18n.days4 }}</span></a>
+				<a class="btn btn-secondary btn-calendar btn-sm" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">{{ i18n.day }}</span></a>
+				<a class="btn btn-secondary btn-calendar btn-sm" @click="showWeek">{{ i18n.week }}</a>
+				<a class="btn btn-secondary btn-calendar btn-sm" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">{{ i18n.days4 }}</span></a>
 			</div>
 
 		</div>
@@ -136,12 +140,14 @@ import Moment from 'moment';
 import {
 	extendMoment
 } from 'moment-range';
+
 import Modal from './Modal.vue'
 
 const moment = extendMoment(Moment);
 
 export default {
 	
+	// Use the modal component
 	components: {
 		'modal-detail': Modal
 	},
@@ -200,7 +206,7 @@ export default {
 
 			//Sets the template to use. Currently, only week is supported
 			template: 'week',
-
+			
 			//Automatically populated by default with a map. YYYYMMDD as the object's keys. The values are the events (from this.events).
 			agendaItems: {},
 
@@ -242,16 +248,12 @@ export default {
 		}
 	},
 
-	watch: {
-
-	},
-
 	computed: {
 
 		// Returns an array of background images, used for the timelines
 		backgroundImage: function () {
 			
-			return Array(this.hourEnd - this.hourStart -1).fill('url(\'' + CALENDAR_PUBLIC_PATH + '/line.svg\')').join(', ');
+			return Array(this.hourEnd - this.hourStart -1).fill('url(\'data:image/svg+xml;utf8,<svg version="1.1" baseProfile="full" width="10" height="1" xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="0" x2="10" y2="0" style="stroke:rgb(220,220,220);stroke-width:1" /></svg>\')').join(', ');
 
 		},
 
@@ -351,14 +353,12 @@ export default {
 		this.showWeek();
 
 	},
+
 	mounted() {
 
-		var objSchedulesPlan = [],
-			windowResize = false;
-
-		var parent = this;
-
 		this.setScrollTop();
+		
+		var parent = this;
 
 		window.addEventListener('resize', function () {
 			parent.resize();
@@ -801,7 +801,7 @@ export default {
 							currentValue.style = {};
 						}
 
-						currentValue.style.width = width + '%';
+						currentValue.style.width = 'calc(' + width + '% - 1px)';
 						currentValue.style.left = left + '%';
 
 					}
