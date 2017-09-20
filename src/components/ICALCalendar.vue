@@ -4,12 +4,10 @@ import ResponsiveCalendar from './ResponsiveCalendar.vue';
 
 const IcalExpander = require('ical-expander');
 import Moment from 'moment';
-
 import { extendMoment } from 'moment-range';
+import VueResource from 'vue-resource';
 
 const moment = extendMoment(Moment);
-
-var VueResource = require('vue-resource');
 
 Vue.use(VueResource);
 
@@ -118,6 +116,9 @@ export default {
 
 				}, response => {
 					// error callback
+					console.log('emit httpError!');
+					parent.$emit('httperror', response)
+
 				});
 
 				
