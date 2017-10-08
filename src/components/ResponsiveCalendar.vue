@@ -1,6 +1,9 @@
 <!--
 The responsive calendar component for vue.js
 -->
+<style lang="scss" scoped>
+@import '../assets/sass/calendar.scss';
+</style>
 
 <template>
 <div class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase(), isLoading ? 'isLoading' : '' ]">

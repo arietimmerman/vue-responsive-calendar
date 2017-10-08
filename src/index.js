@@ -1,16 +1,38 @@
 
 import ResponsiveCalendar from './components/ResponsiveCalendar.vue';
-import ICALCalendar from './components/ICALCalendar.vue';
 import Modal from './components/Modal.vue';
 
-export {ResponsiveCalendar, ICALCalendar};
+// Install the components
+export function install (Vue) {
+  Vue.component('responsive-calendar', ResponsiveCalendar);
+  Vue.component('responsive-calendar-modal', Modal);
+}
 
-export default ResponsiveCalendar;
+// Expose the components
+export {
+  ResponsiveCalendar,
+  Modal
+}
 
-if (typeof window !== 'undefined' && window.Vue) {
-  console.log('register vue-responsive-calendar components!');
-  
-  window.Vue.component('responsive-calendar', ResponsiveCalendar);
-  window.Vue.component('responsive-calendar-ical', ICALCalendar);
-  window.Vue.component('responsive-calendar-modal', Modal);
+/* -- Plugin definition & Auto-install -- */
+/* You shouldn't have to modify the code below */
+
+// Plugin
+const plugin = {
+  /* eslint-disable no-undef */
+  version: VERSION,
+  install,
+}
+
+export default plugin
+
+// Auto-install
+let GlobalVue = null
+if (typeof window !== 'undefined') {
+  GlobalVue = window.Vue
+} else if (typeof global !== 'undefined') {
+  GlobalVue = global.Vue
+}
+if (GlobalVue) {
+  GlobalVue.use(plugin)
 }
