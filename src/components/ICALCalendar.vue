@@ -1,23 +1,24 @@
 <script>
-
 import ResponsiveCalendar from './ResponsiveCalendar.vue';
 
 const IcalExpander = require('ical-expander');
 import Moment from 'moment';
-import { extendMoment } from 'moment-range';
+import {
+	extendMoment
+} from 'moment-range';
 import VueResource from 'vue-resource';
 
 const moment = extendMoment(Moment);
 
 Vue.use(VueResource);
 
-let calendarColors = ['#F37338','#FDB632','#4390BC','#68A7CA','#8DBDD8','#B2D3E6','#D8E9F3','#AFC8CF','#BAD3DA','#7BC0DD'];
+let calendarColors = ['#F37338', '#FDB632', '#4390BC', '#68A7CA', '#8DBDD8', '#B2D3E6', '#D8E9F3', '#AFC8CF', '#BAD3DA', '#7BC0DD'];
 
 export default {
-	    
-  mixins: [ResponsiveCalendar],
 
-  data () {
+	mixins: [ResponsiveCalendar],
+
+	data() {
 		return {
 			agendaItems: {}
 		}
@@ -31,32 +32,38 @@ export default {
 		},
 
 	},
-	
+
 	methods: {
 
 		loadDateRange: function (fromDate, toDate) {
 			
-			console.log('load data range');
-
-			this.currentRange = moment.range(fromDate, toDate);
-
 			var parent = this;
 
-			if(parent.agendaItems[fromDate.format('YYYYMMDD')] && parent.agendaItems[toDate.format('YYYYMMDD')]){
-				
-				// do nothing
+			return new Promise(function (resolve, reject) {
 
-			}else{
+				parent.currentRange = moment.range(fromDate, toDate);
 
-				fromDate = fromDate.clone().add(-14,'day');
-				toDate = toDate.clone().add(14,'day');
+				if (parent.agendaItems[fromDate.format('YYYYMMDD')] && parent.agendaItems[toDate.format('YYYYMMDD')]) {
 
-				Vue.http.get(this.ical, { params: {fromDate: fromDate.format('DD-MM-YYYY'), toDate: toDate.format('DD-MM-YYYY')}}).then(response => {
-					// success callback
+					// do nothing
+					resolve('done');
+
+				} else {
+
+					fromDate = fromDate.clone().add(-14, 'day');
+					toDate = toDate.clone().add(14, 'day');
+
+					Vue.http.get(parent.ical, {
+						params: {
+							fromDate: fromDate.format('DD-MM-YYYY'),
+							toDate: toDate.format('DD-MM-YYYY')
+						}
+					}).then(response => {
+						// success callback
 						var raw = response.body;
-					//FIXME: split by calendar end
+						//FIXME: split by calendar end
 						var calendars = raw.split(/\n\s*\n/);
-						
+
 						var eventsGrouped = {};
 
 						const range = moment.range(fromDate, toDate);
@@ -68,21 +75,28 @@ export default {
 
 						let calendarNames = {};
 
-						calendars.forEach(function(data, index){
+						calendars.forEach(function (data, index) {
 
 							console.log('start parsing calendar!');
 
 							try {
-								const icalExpander = new IcalExpander({ ics: data, maxIterations: 365 });								
+								const icalExpander = new IcalExpander({
+									ics: data,
+									maxIterations: 365
+								});
 								let calendarName = icalExpander.component.getFirstPropertyValue('x-wr-calname');
-								
+
 								let calendarNameId = 'calendar-' + calendarName.replace(/\W+/g, "_");
 
-								calendarNames[calendarNameId] = {name: calendarNameId, displayName: parent.getCalendarDisplayName(calendarName), color: calendarColors[index]};
+								calendarNames[calendarNameId] = {
+									name: calendarNameId,
+									displayName: parent.getCalendarDisplayName(calendarName),
+									color: calendarColors[index]
+								};
 
 								const vevents = icalExpander.between(fromDate.toDate(), toDate.toDate());
-								
-								[].concat(vevents.events, vevents.occurrences).forEach(function(event){
+
+								[].concat(vevents.events, vevents.occurrences).forEach(function (event) {
 
 									event.calendarName = calendarNameId;
 
@@ -92,46 +106,52 @@ export default {
 									var date = moment(event.dateStart).format('YYYYMMDD');
 
 									eventsGrouped[date].push(event);
-									
+
 								});
-							}catch(err){
+							} catch (err) {
 								console.log(err);
 								console.log('parse problems!');
 							}
 
-							parent.agendaItems = Object.assign({},parent.agendaItems,eventsGrouped);
-						
-					});	
+							parent.agendaItems = Object.assign({}, parent.agendaItems, eventsGrouped);
 
-					this.calendarInformation = calendarNames;
-					this.enabledCalendars = Object.keys(calendarNames);
+						});
 
-					var result = {};
+						parent.calendarInformation = calendarNames;
+						parent.enabledCalendars = Object.keys(calendarNames);
 
-					for (let day of parent.currentRange.by('days')) {
-						result[day.format('YYYYMMDD')] = parent.agendaItems[day.format('YYYYMMDD')];
-					}
+						var result = {};
 
-					parent.eventsPropReplacement = result;
+						for (let day of parent.currentRange.by('days')) {
+							result[day.format('YYYYMMDD')] = parent.agendaItems[day.format('YYYYMMDD')];
+						}
 
-				}, response => {
-					// error callback
-					console.log('emit httpError!');
-					parent.$emit('httperror', response)
+						parent.eventsPropReplacement = result;
 
-				});
+						resolve('done');
 
-				
-			}
+					}, response => {
+						// error callback
+						console.log('emit httpError!');
+						parent.$emit('httperror', response)
+
+						reject(response);
+
+					});
+
+
+				}
+
+			});
 
 		},
 
 	},
 
-  components : {
-		'responsive-calendar': ResponsiveCalendar	
+	components: {
+		'responsive-calendar': ResponsiveCalendar
 	}
-	
+
 }
 
 </script>

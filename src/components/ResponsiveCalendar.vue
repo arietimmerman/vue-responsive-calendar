@@ -3,14 +3,14 @@ The responsive calendar component for vue.js
 -->
 
 <template>
-<div class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase()]">
+<div class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase(), isLoading ? 'isLoading' : '' ]">
 
 	<div class="d-flex justify-content-between align-items-center menu">
 		
 		<!-- Buttons top left -->
 		<div>
 			<a class="btn btn-secondary btn-calendar btn-sm" @click="showToday"> 
-				<i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+				{{ today.format('D') }}
 			</a>
 
 			<div class="btn-group" role="group" aria-label="Basic example">
@@ -99,6 +99,8 @@ The responsive calendar component for vue.js
 			</div>
 
 		</div>
+
+		<div id="loader"></div>
 	</template>
 
 	<modal-detail v-if="showModal" @close="showModal = false">
@@ -198,6 +200,8 @@ export default {
 	data() {
 		return {
 			
+			isLoading: true,
+
 			//Set to true to show the event details dialog
 			showModal: false,
 
@@ -475,7 +479,6 @@ export default {
 
 			this.currentRange = moment.range(this.fromDate, this.toDate);
 
-
 			var days = Array.from(this.currentRange.by('day'));
 
 			if (days.length == 1) {
@@ -492,14 +495,24 @@ export default {
 
 			this.$emit('newDateRange', fromDate, toDate);
 
-			this.loadDateRange(fromDate, toDate);
+			this.isLoading = true;	
+
+			var parent = this;
+			this.loadDateRange(fromDate, toDate).then(function(){
+
+				parent.isLoading = false;
+
+			});
 
 		},
 
 		loadDateRange: function (fromDate, toDate) {
-			//dummy method that may be overridden
+			
+			console.log('in loadDateRange');
 
-			// look in agendaItems
+			return new Promise(function(resolve, reject){
+				resolve('done');
+			});
 
 		},
 

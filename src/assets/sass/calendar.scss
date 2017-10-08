@@ -10,6 +10,27 @@
 		display: flex;
 		flex-direction: column;
 
+		#loader{
+			visibility: hidden;
+			opacity: 0.0;
+			transition: opacity 1.0s, visibility 1.0s;
+		}
+
+		&.isLoading{
+
+			.calendar{
+				visibility: hidden;
+				opacity: 0.0;
+			}
+
+			#loader{
+				visibility: visible;
+				opacity: 1.0;
+			}
+
+			@import './loading';
+		}
+
 		.btn.btn-calendar{
 			background-color: white;
 			color: #1e1e1e;
@@ -133,6 +154,7 @@
 		.calendar {
 			
 			flex-grow: 1;
+			opacity: 1.0;
 
 			box-sizing: border-box;
 			position: relative;
@@ -140,6 +162,9 @@
 			width: 100%;
 			height: 100%;
 			overflow: scroll;
+
+			transition: opacity 1.0s, visibility 1.0s;
+			
 
 			ul li {
 				list-style-type: none;
