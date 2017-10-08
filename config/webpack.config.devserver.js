@@ -8,7 +8,7 @@ var globalName = 'VueResponsiveCalendar'
 module.exports = merge(base, {
   output: {
     path: path.resolve(__dirname, '../dist'),
-    filename: outputFile + '.common.js',
+    filename: outputFile + '.browser.js',
     publicPath: "/assets/",    
     library: globalName,
     libraryTarget: 'umd',
