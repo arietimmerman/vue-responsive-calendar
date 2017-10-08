@@ -18,8 +18,8 @@ The responsive calendar component for vue.js
 
 			<div class="btn-group" role="group" aria-label="Basic example">
 
-				<a class="btn btn-secondary btn-calendar btn-sm ml-1" @click="prev"><i class="fa fa-chevron-left" aria-hidden="true"></i></a>
-				<a class="btn btn-secondary btn-calendar btn-sm" @click="next"><i class="fa fa-chevron-right" aria-hidden="true"></i></a>
+				<a class="btn btn-secondary btn-calendar btn-sm ml-1 left-button" @click="prev"> </a>
+				<a class="btn btn-secondary btn-calendar btn-sm right-button" @click="next"></a>
 
 			</div>
 
@@ -30,8 +30,8 @@ The responsive calendar component for vue.js
 		<!-- Buttons top right -->
 		<div>
 
-			<button class="btn btn-secondary btn-calendar btn-sm mr-1" type="button" v-if="Object.keys(calendarInformation).length > 0" @click="showCalendarPicker = true">
-						<i class="fa fa-bars" aria-hidden="true"></i>
+			<button class="btn btn-secondary btn-calendar btn-sm mr-1 bars-button" type="button" v-if="Object.keys(calendarInformation).length > 0" @click="showCalendarPicker = true">
+						
 			</button>
 
 			<div class="btn-group pull-right" role="group" aria-label="Basic example">
