@@ -1,6 +1,8 @@
 var webpack = require('webpack')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
-
+var PurifyCSSPlugin = require('purifycss-webpack');
+var glob = require('glob');
+var path = require('path');
 var outputFile = 'vue-responsive-calendar'
 var globalName = 'VueResponsiveCalendar'
 
@@ -26,8 +28,12 @@ module.exports = {
         options: {
           loaders: {
             css: ExtractTextPlugin.extract('css-loader'),
-            sass: ExtractTextPlugin.extract('css-loader!sass-loader'),
-            scss: ExtractTextPlugin.extract('css-loader!sass-loader'),
+            sass: ExtractTextPlugin.extract({
+              use: ['css-loader','sass-loader']
+            }),
+            scss: ExtractTextPlugin.extract({
+              use: ['css-loader','sass-loader']
+            }),
           },
         },
       },
@@ -38,5 +44,10 @@ module.exports = {
       'VERSION': JSON.stringify(config.version),
     }),
     new ExtractTextPlugin(outputFile + '.css'),
+    new PurifyCSSPlugin({
+      moduleExtensions: ['.vue'],
+      minimize: true,
+      paths: glob.sync(path.join(__dirname, 'src/components/*.vue')),
+    })
   ],
 }

@@ -1,6 +1,14 @@
-# Responsive Calendar for Vue.js
+# A responsive calendar component for Vue.js
 
-> A responsive calendar with Vue
+> A responsive calendar component for Vue.js
+
+## Install
+
+```bash
+npm install --save vue-responsive-calendar
+```
+
+It's also available on unpkg: https://unpkg.com/vue-responsive-calendar
 
 ## Usage
 
@@ -8,14 +16,11 @@
 <html>
 <head>
 
-<!-- Bootstrap 4 CSS -->
-<link rel="stylesheet" href="https://unpkg.com/bootstrap@4.0.0-beta/dist/css/bootstrap.min.css">
-
 <!-- Vue -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
 
-<script src="https://unpkg.com/vue-responsive-calendar@1.0.8/dist/vue-responsive-calendar.browser.js"></script>
-<link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-responsive-calendar@1.0.8/dist/vue-responsive-calendar.css">
+<script src="https://unpkg.com/vue-responsive-calendar@1.1.1/dist/vue-responsive-calendar.browser.js"></script>
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-responsive-calendar@1.1.1/dist/vue-responsive-calendar.css">
 
 </head>
 <body>
@@ -50,7 +55,7 @@ const app = new Vue({
 </html>
 ~~~
 
-## Build Setup
+## Development
 
 ``` bash
 # install dependencies
@@ -60,7 +65,6 @@ npm install
 npm run build
 
 # develop
-npm run dev
-
+npm run devserver
 ```
 
