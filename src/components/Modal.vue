@@ -101,6 +101,9 @@
               <slot name="location">
                   Hilversum
               </slot>
+              <slot name="calendar">
+                  
+              </slot>
             </div>
             <div>
               <slot name="footer">

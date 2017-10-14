@@ -44,7 +44,7 @@
 
     <div id="app">
 
-      <responsive-calendar max-size="l" :events="events"></responsive-calendar>
+      <responsive-calendar max-size="l" :events="events" :initial-calendar-information="calendarInformation"></responsive-calendar>
 
     </div>
 
@@ -58,37 +58,42 @@ const app = new Vue({
 
   el: '#app',
   data: {
+    calendarInformation: {'example':{name: 'example', displayName: 'Example Calendar', color: '#9A9CFF'}},
     events: [{
         dateStart: new Date(today.getTime() + (21.5 * 60 * 60 * 1000)),
         dateEnd: new Date(today.getTime() + (22.5 * 60 * 60 * 1000)),
         styleClass: null,
-        summary: 'Dit is een test',
-        description: 'test',
-        location: 'geen idee'
+        calendarName: 'example',
+        summary: 'Great event.',
+        description: 'This is the long description',
+        location: 'Amsterdam'
       },
       {
         dateStart: new Date(today.getTime() + (21 * 60 * 60 * 1000)),
         dateEnd: new Date(today.getTime() + (22 * 60 * 60 * 1000)),
         styleClass: null,
-        summary: 'Dit is een test',
-        description: 'test',
-        location: 'geen idee'
+        calendarName: 'example',
+        summary: 'Meeting with John',
+        description: 'To discuss the important things.',
+        location: 'Den Ham'
       },
       {
         dateStart: new Date(today.getTime() + (20.7 * 60 * 60 * 1000)),
         dateEnd: new Date(today.getTime() + (23 * 60 * 60 * 1000)),
         styleClass: null,
-        summary: 'Dit is een test',
-        description: 'test',
-        location: 'geen idee'
+        summary: 'Holiday Party',
+        calendarName: 'example',
+        description: 'A party with bitterballs and drinks.',
+        location: 'Hilversum'
       },
       {
         dateStart: new Date(today.getTime()),
         dateEnd: new Date(today.getTime() + 60 * 60 * 1000),
         styleClass: null,
-        summary: 'Dit is een test',
-        description: 'test',
-        location: 'geen idee'
+        summary: 'Yes another meeting',
+        description: 'Here the description of the meeting',
+        calendarName: 'example',
+        location: 'Rotterdam'
       }
 
     ]

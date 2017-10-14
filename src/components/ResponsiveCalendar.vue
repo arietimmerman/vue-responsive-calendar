@@ -1,7 +1,7 @@
 <!--
 The responsive calendar component for vue.js
 -->
-<style lang="scss" scoped>
+<style lang="scss">
 @import '../assets/sass/calendar.scss';
 </style>
 
@@ -113,6 +113,7 @@ The responsive calendar component for vue.js
 		<span slot="date">{{ getTime(currentEvent.dateStart) }} - {{ getTime(currentEvent.dateEnd) }}</span>
 		<span slot="location">{{ currentEvent.location }}</span>
 
+		<span @click="showModal = false; showCalendarPicker = true;" slot="calendar" v-if="currentEvent.calendarName"><span class="badge badge-pill badge-primary" :style="{'backgroundColor': getCalendarInformation(currentEvent.calendarName).color }">{{ getCalendarInformation(currentEvent.calendarName).displayName }}</span></span>
 	</modal-detail>
 
 	<modal-detail v-if="showCalendarPicker" @close="showCalendarPicker = false">
@@ -162,6 +163,11 @@ export default {
 	props: {
 
 		//TODO: introduce start of week
+		
+		initialCalendarInformation: {
+			type: Array,
+			default: null
+		},
 
 		/**
  		* @property {Array.<{dateStart: Date, dateEnd: Date, styleClass: String, summary: String, description: String, location: String}>} events
@@ -220,7 +226,7 @@ export default {
 			//Automatically populated by default with a map. YYYYMMDD as the object's keys. The values are the events (from this.events).
 			agendaItems: {},
 
-			//Array with elements like {name: String, displayName: String}
+			//Array with elements like {name: String, displayName: String, color: String}
 			calendarInformation: [],
 
 			//Sets the calendars that should be enabled
@@ -317,6 +323,8 @@ export default {
 
 					if(Object.keys(this.calendarInformation).length > 0){
 						console.log('has calendar information');
+						console.log('Check: ' + e[i][j].calendarName);
+						console.log(this.enabledCalendars);
 						if (this.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
 							console.log('ignore a calendar!');
 							e[i][j].ignore = true;
@@ -348,6 +356,13 @@ export default {
 	},
 
 	created() {
+
+		if(this.initialCalendarInformation){
+			this.calendarInformation = this.initialCalendarInformation;
+			this.enabledCalendars = Object.keys(this.calendarInformation);
+
+			console.log(this.enabledCalendars);
+		}
 
 		this.timelineSlotDuration = this.getScheduleTimestamp('7:30') - this.getScheduleTimestamp('07:00');
 		this.timelineStart = this.getScheduleTimestamp(('0' + this.hourStart).slice(-2) + ':00');
@@ -397,6 +412,18 @@ export default {
 
 		getCalendarDisplayName: function (name) {
 			return name.replace('\\','');
+		},
+
+		getCalendarInformation: function (name) {
+			
+			var result = {};
+
+			if(this.calendarInformation[name]){
+				result = this.calendarInformation[name];
+			}
+
+			return result;
+
 		},
 
 		setScrollTop: function () {
@@ -874,7 +901,9 @@ export default {
 
 			return result;
 
-		}
+		},
+
+		
 
 	}
 

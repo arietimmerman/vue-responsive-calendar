@@ -21,8 +21,8 @@ It's also available on unpkg: https://unpkg.com/vue-responsive-calendar
 <!-- Vue -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
 
-<script src="https://unpkg.com/vue-responsive-calendar@1.1.1/dist/vue-responsive-calendar.browser.js"></script>
-<link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-responsive-calendar@1.1.1/dist/vue-responsive-calendar.css">
+<script src="https://unpkg.com/vue-responsive-calendar@1.1.3/dist/vue-responsive-calendar.browser.js"></script>
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/vue-responsive-calendar@1.1.3/dist/vue-responsive-calendar.css">
 
 </head>
 <body>
