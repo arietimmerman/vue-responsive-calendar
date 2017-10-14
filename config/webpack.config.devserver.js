@@ -9,7 +9,7 @@ module.exports = merge(base, {
   output: {
     path: path.resolve(__dirname, '../dist'),
     filename: outputFile + '.browser.js',
-    publicPath: "/assets/",    
+    publicPath: "/dist/",
     library: globalName,
     libraryTarget: 'umd',
   },

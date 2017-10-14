@@ -18,7 +18,7 @@
   "module": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack --config config/webpack.config.dev.js --progress --watch",
-    "devserver": "cross-env NODE_ENV=development webpack-dev-server --config config/webpack.config.devserver.js --content-base docs/ --inline --hot --open",
+    "devserver": "cross-env NODE_ENV=development webpack-dev-server --config config/webpack.config.devserver.js --content-base examples --inline --hot --open",
     "build": "npm run build:browser && npm run build:common",
     "build:browser": "cross-env NODE_ENV=production webpack --config config/webpack.config.browser.js --progress --hide-modules",
     "build:common": "cross-env NODE_ENV=production webpack --config config/webpack.config.common.js --progress --hide-modules",
