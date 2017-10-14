@@ -2,6 +2,8 @@
 
 > A responsive calendar component for Vue.js
 
+[Demo](https://arietimmerman.github.io/vue-responsive-calendar/examples/)
+
 ## Install
 
 ```bash

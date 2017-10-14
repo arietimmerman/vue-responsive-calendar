@@ -7,36 +7,50 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   
-  <link rel="stylesheet" type="text/css" href="/dist/vue-responsive-calendar.css">
+  <link rel="stylesheet" type="text/css" href="../dist/vue-responsive-calendar.css">
   
   <style type="text/css">
     html, body
      {
       height: 100%;
-      background-color: black;
-      overflow: hidden;
+      background-color: blue;
+      width: 100%;
+      margin: 0px;
+      padding: 0px;
+    }
+
+    body {
+      
+    }
+
+    #container {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      background-color: white;
     }
 
     #app{
-      margin: 40px;
-      background-color: white;
-      height: calc(100% - 80px);
-      padding: 20px;
-      border-radius: 10px;
+      flex-grow: 1;  
+      margin: 20px;
     }
+    
   </style>
 </head>
 
 <body>
 
-  <div id="app">
+  <div id="container">
 
-    <responsive-calendar max-size="l" :events="events"></responsive-calendar>
+    <div id="app">
+
+      <responsive-calendar max-size="l" :events="events"></responsive-calendar>
+
+    </div>
 
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
-  <script src="/dist/vue-responsive-calendar.browser.js"></script>
+  <script src="../dist/vue-responsive-calendar.browser.js"></script>
   <script>
 var today = new Date();
 

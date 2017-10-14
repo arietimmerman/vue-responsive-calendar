@@ -44,10 +44,13 @@ module.exports = {
       'VERSION': JSON.stringify(config.version),
     }),
     new ExtractTextPlugin(outputFile + '.css'),
-    new PurifyCSSPlugin({
-      moduleExtensions: ['.vue'],
-      minimize: true,
-      paths: glob.sync(path.join(__dirname, 'src/components/*.vue')),
-    })
+    // new PurifyCSSPlugin({
+    //   moduleExtensions: ['.vue'],
+    //   minimize: true,
+    //   purifyOptions: {
+    //     whitelist: ['btn-active']
+    //   },
+    //   paths: glob.sync(path.join(__dirname, 'src/components/*.vue')),
+    // })
   ],
 }

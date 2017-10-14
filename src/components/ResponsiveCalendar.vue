@@ -35,9 +35,9 @@ The responsive calendar component for vue.js
 			</button>
 
 			<div class="btn-group pull-right" role="group" aria-label="Basic example">
-				<a class="btn btn-secondary btn-calendar btn-sm" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">{{ i18n.day }}</span></a>
-				<a class="btn btn-secondary btn-calendar btn-sm" @click="showWeek">{{ i18n.week }}</a>
-				<a class="btn btn-secondary btn-calendar btn-sm" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">{{ i18n.days4 }}</span></a>
+				<a class="btn btn-secondary btn-calendar btn-sm" :class="{'btn-active': this.viewActive == 'view-1'}" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">{{ i18n.day }}</span></a>
+				<a class="btn btn-secondary btn-calendar btn-sm" :class="{'btn-active': this.viewActive == 'view-7'}" @click="showWeek">{{ i18n.week }}</a>
+				<a class="btn btn-secondary btn-calendar btn-sm" :class="{'btn-active': this.viewActive == 'view-4'}" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">{{ i18n.days4 }}</span></a>
 			</div>
 
 		</div>
@@ -52,7 +52,7 @@ The responsive calendar component for vue.js
 
 	<template v-else>
 		<!-- TODO: consider adding an extra element with a possible scrollbar. Set scrollStart on Vue mounted -->
-		<div class="dayline">
+		<div class="dayline" :class=[viewActive]>
 			<ul>
 
 				<!-- TODO: Always show full week when showing 1 day. Like on IOS -->
@@ -139,6 +139,8 @@ The responsive calendar component for vue.js
 
 <script>
 
+//document.querySelector('li[data-v-c001343a]').getBoundingClientRect()
+
 import _ from 'lodash';
 import Moment from 'moment';
 
@@ -213,6 +215,7 @@ export default {
 
 			//Sets the template to use. Currently, only week is supported
 			template: 'week',
+			viewActive: null, //can be one, seven, four
 			
 			//Automatically populated by default with a map. YYYYMMDD as the object's keys. The values are the events (from this.events).
 			agendaItems: {},
@@ -372,9 +375,11 @@ export default {
 		});
 
 		var eventsGrouped = {};
-
+		
 		this.events.forEach(function(event){
-			var date = moment(event.dateStart).format('YYYYMMDD');
+
+			//if dataStart is a momentjs object, use that. Check with moment.isMoment(obj);
+			var date = (moment.isMoment(event.dateStart)?event.dateStart:moment(event.dateStart)).format('YYYYMMDD');
 
 			if(!eventsGrouped[date]){
 				eventsGrouped[date] = [];
@@ -482,6 +487,8 @@ export default {
 
 			this.currentRange = moment.range(this.fromDate, this.toDate);
 
+			this.viewActive = 'view-' + (this.currentRange.diff('days')+1);
+
 			var days = Array.from(this.currentRange.by('day'));
 
 			if (days.length == 1) {
@@ -521,6 +528,7 @@ export default {
 
 		showToday: function () {
 			this.template = 'week';
+			
 			//var today = moment();
 			this.dateActive = this.today.clone();
 
@@ -536,12 +544,14 @@ export default {
 
 		showOneDay: function () {
 			this.template = 'week';
+			
 			this.setDateRange(this.dateActive, this.dateActive);
 
 		},
 
 		showFourDay: function () {
 			this.template = 'week';
+			
 			this.setDateRange(this.dateActive, this.dateActive.clone().add(3, 'day'));
 
 		},
@@ -549,6 +559,7 @@ export default {
 		showWeek: function () {
 
 			this.template = 'week';
+			this.viewActive = 'seven';
 			this.setDateRange(this.dateActive.clone().startOf('week'), this.dateActive.clone().endOf('week'));
 
 		},

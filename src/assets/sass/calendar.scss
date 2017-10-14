@@ -57,6 +57,15 @@
 		.btn.btn-calendar{
 			background-color: white;
 			color: #1e1e1e;
+
+			&.btn-active{
+				font-weight: bold;
+				background-color: #C2C2C2;
+			}
+		}
+
+		.btn.btn-calendar:hover{
+			background-color: #C2C2C2;
 		}
 
 		&.container{
@@ -97,6 +106,10 @@
 			clear: both;
 			margin-top: 5px;
 			margin-bottom: 3px;
+
+			&.view-1 .top-info:not(.selected) a{
+				opacity: 0.6;
+			}
 			
 			ul {
 				display: flex;
