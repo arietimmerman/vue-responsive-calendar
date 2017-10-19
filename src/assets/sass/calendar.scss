@@ -187,6 +187,34 @@
 				}
 			}
 		}
+
+		.pages {
+			flex-grow: 1;
+			background-color: blue;
+			left: 0%;
+			top: 0px;
+			overflow-y: hidden;
+			overflow-x: hidden;
+			white-space: nowrap;
+			position: relative;
+
+			.page {
+				width: 100%;
+				height: 100%;
+				display: block;
+				position: absolute;
+				transition: all 500ms ease-out;
+
+				&.notransition {
+					transition: none!important;
+				}
+
+				&.prev{
+					margin-left: -100%;
+				}
+			}
+		}
+
 		.calendar {
 			
 			flex-grow: 1;

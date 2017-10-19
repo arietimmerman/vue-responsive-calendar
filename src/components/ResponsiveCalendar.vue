@@ -6,7 +6,7 @@ The responsive calendar component for vue.js
 </style>
 
 <template>
-<div class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase(), isLoading ? 'isLoading' : '' ]">
+<div ref="calendarcontainer" class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase(), isLoading ? 'isLoading' : '' ]">
 
 	<div class="d-flex justify-content-between align-items-center menu">
 		
@@ -52,10 +52,17 @@ The responsive calendar component for vue.js
 
 	<template v-else>
 		<!-- TODO: consider adding an extra element with a possible scrollbar. Set scrollStart on Vue mounted -->
-		<div class="dayline" :class=[viewActive]>
+		<div class="pages">
+
+		<div class="page prev">
+			<!-- Load this after current page ... -->
+		</div>
+
+		<div class="page current" :style="{'marginLeft':currentMarginLeft +'px'}">
+
+		<div class="dayline" :class="[viewActive]">
 			<ul>
 
-				<!-- TODO: Always show full week when showing 1 day. Like on IOS -->
 				<li class="top-info" v-for="day in days" v-bind:class="{today: day.isSame(today,'day'), selected: day.isSame(dateActive,'day') } ">
 
 					<a class="d-flex mt-1 justify-content-center" @click="setDateRange(day,day)">
@@ -104,6 +111,9 @@ The responsive calendar component for vue.js
 		</div>
 
 		<div id="loader"></div>
+
+		</div>
+		</div>
 	</template>
 
 	<modal-detail v-if="showModal" @close="showModal = false">
@@ -145,6 +155,8 @@ The responsive calendar component for vue.js
 import _ from 'lodash';
 import Moment from 'moment';
 
+import touch from '../assets/js/touch';
+
 import {
 	extendMoment
 } from 'moment-range';
@@ -152,6 +164,12 @@ import {
 import Modal from './Modal.vue'
 
 const moment = extendMoment(Moment);
+
+var moveStart = null;
+
+//TODO: detect swipe, if left, move to previous week. If right, move to next week.
+// See: https://developer.mozilla.org/en-US/docs/Web/API/Touch_events/Using_Touch_Events
+// Start moving immediatly. Move in px ... Stick to percentages 
 
 export default {
 	
@@ -211,6 +229,10 @@ export default {
 	data() {
 		return {
 			
+			pages: [ {}, {}, {} ], //start with, prev, current, and next page. Start with loading current ...
+
+			currentMarginLeft: 0,
+
 			isLoading: true,
 
 			//Set to true to show the event details dialog
@@ -388,6 +410,20 @@ export default {
 		window.addEventListener('resize', function () {
 			parent.resize();
 		});
+		
+		const elementprev = document.getElementsByClassName('prev')[0];
+		const element = document.getElementsByClassName('current')[0];
+
+		console.log('set event listeners!');
+		this.$refs.calendarcontainer.addEventListener("touchstart", this.touchStart, false);
+		this.$refs.calendarcontainer.addEventListener("touchend", this.touchEnd, false);
+		this.$refs.calendarcontainer.addEventListener("touchleave", this.touchEnd, false);
+		this.$refs.calendarcontainer.addEventListener("touchmove", evt => { 
+
+			elementprev.style.marginLeft = 'calc(-100% + ' + (evt.changedTouches[0].clientX - moveStart) + 'px)';
+			element.style.marginLeft = (evt.changedTouches[0].clientX - moveStart) + 'px';
+
+		}, false);
 
 		var eventsGrouped = {};
 		
@@ -409,6 +445,36 @@ export default {
 	},
 
 	methods: {
+
+		touchStart: function(evt){
+
+			moveStart = evt.changedTouches[0].clientX;
+			const elementprev = document.getElementsByClassName('prev')[0];
+			const element = document.getElementsByClassName('current')[0];
+			element.classList.add('notransition');
+			elementprev.classList.add('notransition');
+		},
+
+		touchEnd: function(evt){
+			//TODO: Reset what's prev, current and next
+			const element = document.getElementsByClassName('current')[0];
+			const elementprev = document.getElementsByClassName('prev')[0];
+			element.classList.remove('notransition');
+			elementprev.classList.remove('notransition');
+			element.style.marginLeft = '100%';
+			elementprev.style.marginLeft = '0%';
+			console.log((evt.changedTouches[0].clientX - moveStart) + 'px');
+
+		},
+
+		touchMove: function(evt){
+			
+			console.log('move');
+			console.log((evt.changedTouches[0].clientX - moveStart) + 'px');
+
+			this.currentMarginLeft = (evt.changedTouches[0].clientX - moveStart) + 'px';
+
+		},
 
 		getCalendarDisplayName: function (name) {
 			return name.replace('\\','');
