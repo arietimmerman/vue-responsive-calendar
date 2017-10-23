@@ -54,11 +54,8 @@ The responsive calendar component for vue.js
 		<!-- TODO: consider adding an extra element with a possible scrollbar. Set scrollStart on Vue mounted -->
 		<div class="pages">
 
-		<div class="page prev">
-			<!-- Load this after current page ... -->
-		</div>
-
-		<div class="page current" :style="{'marginLeft':currentMarginLeft +'px'}">
+		<!-- some are current, some are prev, some are next -->
+		<div v-for="page in pages" class="page" :style="{'marginLeft':currentMarginLeft +'px'}">
 
 		<div class="dayline" :class="[viewActive]">
 			<ul>
@@ -88,7 +85,7 @@ The responsive calendar component for vue.js
 			<div class="events" v-bind:style="{ backgroundImage: backgroundImage, backgroundPosition: backgroundPosition }">
 
 				<ul>
-					<li v-for="(item, key) in currentAgendaItems" class="events-group" v-bind:class="{today: key == today}" v-bind:style="{ width : (100.0/Object.keys(currentAgendaItems).length) + '%'}">
+					<li v-for="(item, key) in page.data.getAgendaItems()" class="events-group" v-bind:class="{today: key == today}" v-bind:style="{ width : (100.0/7.0) + '%'}">
 
 						<ul>
 							<template v-for="event in item">
@@ -120,10 +117,12 @@ The responsive calendar component for vue.js
 		<h3 slot="header">{{ currentEvent.summary ? currentEvent.summary : currentEvent.item.summary }}</h3>
 
 		<p slot="body">{{ currentEvent.description }}</p>
+		<!--
 		<span slot="date">{{ getTime(currentEvent.dateStart) }} - {{ getTime(currentEvent.dateEnd) }}</span>
 		<span slot="location">{{ currentEvent.location }}</span>
 
 		<span @click="showModal = false; showCalendarPicker = true;" slot="calendar" v-if="currentEvent.calendarName"><span class="badge badge-pill badge-primary" :style="{'backgroundColor': getCalendarInformation(currentEvent.calendarName).color }">{{ getCalendarInformation(currentEvent.calendarName).displayName }}</span></span>
+		-->
 	</modal-detail>
 
 	<modal-detail v-if="showCalendarPicker" @close="showCalendarPicker = false">
@@ -155,7 +154,7 @@ The responsive calendar component for vue.js
 import _ from 'lodash';
 import Moment from 'moment';
 
-import touch from '../assets/js/touch';
+//	import touch from '../assets/js/touch';
 
 import {
 	extendMoment
@@ -167,9 +166,393 @@ const moment = extendMoment(Moment);
 
 var moveStart = null;
 
+var agendaItems = null;
+
+var timelineStart = null;
+var timelineEnd = null;
+var timelineDuration = null;
+
 //TODO: detect swipe, if left, move to previous week. If right, move to next week.
 // See: https://developer.mozilla.org/en-US/docs/Web/API/Touch_events/Using_Touch_Events
 // Start moving immediatly. Move in px ... Stick to percentages 
+
+//TODO: Create something like  `new DateRange(start,end)  (with new Day(day) components??)
+// Twee zware operaties: (1) data inladen, (2) berekening breedte/hoogte
+class DateRange {
+
+	constructor(fromData, toDate) {
+		this.fromData = fromData;
+		this.toDate = toDate;
+
+		this.count = 0;
+
+		this.currentRange = moment.range(this.fromDate, this.toDate);
+	}
+
+	static getTime(date) {
+
+		if (date == null) return null;
+
+		return moment(date).format('HH:mm');
+	}
+
+	static calculateOverlap(start, end, events, index) {
+
+		var result = [];
+
+		var max = 0;
+
+		for (var i = index; i < events.length; i++) {
+
+			var other = events[i];
+
+			var otherStart = DateRange.getScheduleTimestamp(DateRange.getTime(other.dateStart));
+			var otherEnd = DateRange.getScheduleTimestamp(DateRange.getTime(other.dateEnd));
+
+			var overlapStart = Math.max(start, otherStart);
+			var overLapEnd = Math.min(end, otherEnd);
+
+			if (start < otherEnd && otherStart < end) {
+
+				var overLappingElements = [other];
+
+				var overlapSets = [];
+
+				overlapSets = overlapSets.concat(DateRange.calculateOverlap(overlapStart, overLapEnd, events, i + 1));
+
+				overlapSets.forEach(function (currentValue, index, array) {
+					result.push(overLappingElements.concat(currentValue));
+				});
+
+				result.push(overLappingElements);
+
+			}
+
+		}
+
+		return result;
+
+	}
+
+	static getScheduleTimestamp(time) {
+
+		if (!time) return 0.001;
+
+		//accepts hh:mm format - convert hh:mm to time in minutes
+		time = time.replace(/ /g, '');
+		var timeArray = time.split(':');
+		var timeStamp = parseInt(timeArray[0]) * 60 + parseInt(timeArray[1]);
+
+		return timeStamp;
+	}
+
+	static calculateHeight(event) {
+
+		if (event.dateStart && event.dateEnd) {
+
+			var start = DateRange.getScheduleTimestamp(moment(event.dateStart).format('HH:mm'));
+			var duration = DateRange.getScheduleTimestamp(moment(event.dateEnd).format('HH:mm')) - start;
+
+			//TODO: fix timelineStart en timelineDuration
+			var eventTop = 100.0 * (start - timelineStart) / timelineDuration;
+			var eventHeight = 100.0 * duration / timelineDuration;
+
+			if (!event.style) {
+				event.style = {};
+			}
+
+			event.styleClass = [event.calendarName];
+
+			event.style.height = (eventHeight) + '%';
+			event.style.top = (Math.max(0, eventTop)) + '%';
+
+		} else {
+
+		}
+	}
+
+	static fixWidthForEventGroup(eventGroup) {
+
+		if (eventGroup == null) return;
+
+		var self = this;
+		var events = eventGroup;
+
+		var overLapSets = [];
+
+		events.forEach(function (event, index) {
+
+			var start = DateRange.getScheduleTimestamp(moment(event.dateStart).format('HH:mm'));
+			var end = DateRange.getScheduleTimestamp(moment(event.dateEnd).format('HH:mm'));
+
+			var overLappingElements = [event];
+
+			var sets = DateRange.calculateOverlap(start, end, events, index + 1);
+
+			sets.forEach(function (currentValue, index, array) {
+				var set = overLappingElements.concat(currentValue);
+				overLapSets.push(set);
+			});
+
+		});
+
+		overLapSets.sort(function (a, b) {
+
+			if (a.length > b.length) {
+				return -1;
+			} else {
+				return 1;
+			}
+
+		});
+
+		overLapSets.forEach(function (currentValue, index, array) {
+
+			var width = 100.0 / currentValue.length;
+
+			var usedRanges = [];
+			var usedWidth = 0;
+
+			//Calculate all used ranges in a certain overlap set
+			currentValue.forEach(function (currentValue, index, array) {
+
+				var left = currentValue.dataLeft;
+				var width = currentValue.dataWidth;
+
+				if (typeof left !== typeof undefined && left !== false) {
+					usedRanges.push([parseFloat(left), parseFloat(left) + parseFloat(width)]);
+				}
+
+			});
+
+			// sort ranges in order of occurences, left to right
+			usedRanges.sort(function (a, b) {
+				if (a[0] < b[0]) {
+					return -1;
+				} else {
+					return 1;
+				}
+
+			});
+
+			var freeRanges = [];
+
+			//find all free ranges
+			for (var i = 0; i < usedRanges.length; i++) {
+
+				var previous = (i == 0) ? 0.0 : usedRanges[i - 1][1];
+
+				var next = usedRanges[i][0];
+
+				if ((next - previous) > 0.0) {
+					freeRanges.push([previous, next]);
+				}
+
+			}
+
+			if (usedRanges.length > 0) {
+				var previous = usedRanges[usedRanges.length - 1][1];
+				var next = 100.0;
+
+				if ((next - previous) > 0.0) {
+					freeRanges.push([previous, next]);
+				}
+			} else {
+				freeRanges.push([0.0, 100.0]);
+			}
+
+			// verdeel de ranges in currentValue.lenght stukken waarbij het grootste stuk niet groter is dan 2x het kleinste stuk
+			var elementsThatNeedSpace = [];
+
+			currentValue.forEach(function (currentValue, index, array) {
+
+				var attr = currentValue.dataWidth;
+
+				if (typeof attr === typeof undefined || attr === false) {
+
+					elementsThatNeedSpace.push(currentValue);
+
+				} else {
+
+					//this element has already been placed
+
+				}
+			});
+
+			//Calculate the number of elements that still require space
+			var spacesNeeded = parseFloat(elementsThatNeedSpace.length);
+
+			//If no element needs space, continue with the next overlap set
+			if (spacesNeeded == 0) {
+				return;
+			}
+
+			var spaces = [];
+
+			//there are 2 or more spaces to populate 2 or more ranges
+
+			// sort free ranges by size, biggest first
+			var rangeCandidates = freeRanges.sort(function (a, b) {
+
+				if (a[1] - a[0] > b[1] - b[0]) {
+					return -1;
+				} else {
+					return 1;
+				}
+
+			});
+
+			//find the largest element
+			var largestSize = rangeCandidates[0][1] - rangeCandidates[0][0];
+
+			//calculate the minimum size of an element, it should not be smaller then necessary
+			var minimumSize = largestSize / spacesNeeded;
+			var totalSize = 0;
+
+			//filter out very small free spaces
+			rangeCandidates = rangeCandidates.filter(function (value) {
+
+				var elementSize = value[1] - value[0];
+
+				if (elementSize >= minimumSize) {
+					totalSize += elementSize;
+					return true;
+				} else {
+					return false;
+				}
+
+			});
+
+			//find the smallest range left
+			var smallestRange = rangeCandidates[rangeCandidates.length - 1];
+
+			//And ensure is not larger then this smallest range
+			var elementSize = Math.min(smallestRange[1] - smallestRange[0], totalSize / spacesNeeded)
+
+			//loop over the range candidates, start with the smallest
+			rangeCandidates.reverse().forEach(function (e, index, array) {
+
+				//how much space do we have?
+				var rangeSize = (e[1] - e[0]);
+
+				//calculate how much elements this space should contain
+				var elementsInRange = 0;
+
+				if (index != (array.length - 1)) {
+					elementsInRange = Math.floor(rangeSize / elementSize);
+				} else {
+					elementsInRange = spacesNeeded;
+				}
+
+				var width = rangeSize / elementsInRange;
+
+				for (var i = 0.0; i < elementsInRange; i++) {
+					spaces.push([e[0] + i * (width), e[0] + (i + 1) * (width)]);
+				}
+
+				spacesNeeded = spacesNeeded - elementsInRange;
+
+			});
+
+			elementsThatNeedSpace.forEach(function (currentValue, index) {
+
+				if (spaces[index]) {
+					var left = spaces[index][0];
+					var width = spaces[index][1] - spaces[index][0];
+
+					currentValue.dataWidth = width;
+					currentValue.dataLeft = left;
+
+					if (!currentValue.style) {
+						currentValue.style = {};
+					}
+
+					currentValue.style.width = 'calc(' + width + '% - 1px)';
+					currentValue.style.left = left + '%';
+
+				}
+
+			});
+
+		});
+	}
+
+	getAgendaItems() {
+
+		this.count++;
+
+		// if(this.count > 1){
+		// 	console.log('too much loads!');
+		// 	return;
+		// }
+
+		console.log('get agenda items');
+		// (1) First, load the current agenda items
+		var e = {};
+
+		for (let day of this.currentRange.by('days')) {
+			var r = agendaItems[day.format('YYYYMMDD')];
+
+			e[day.format('YYYYMMDD')] = r ? r : [];
+		}
+
+		// (2) Prepare presenting
+		for (var i in e) {
+
+			var j = e[i].length
+
+			while (j--) {
+
+				if (e[i][j].style) {
+					delete e[i][j].dataWidth;
+					delete e[i][j].dataLeft;
+					delete e[i][j].style.width;
+					delete e[i][j].style.left;
+				} else {
+					e[i][j].style = {};
+				}
+
+				e[i][j].ignore = false;
+				e[i][j].style.display = 'block';
+
+				// if (Object.keys(this.calendarInformation).length > 0) {
+
+				// 	if (this.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
+				// 		e[i][j].ignore = true;
+				// 		e[i][j].style.display = 'none';
+				// 	} else {
+				// 		e[i][j].style.backgroundColor = this.calendarInformation[e[i][j].calendarName].color;
+				// 	}
+				// } else {
+
+				// }
+
+			}
+
+		}
+
+		for (var i in e) {
+
+			DateRange.fixWidthForEventGroup(e[i].filter(function (e) {
+				console.log('ignore: ' + e.ignore);
+				return !e.ignore;
+			}));
+
+			for (var j in e[i].filter(function (e) {
+					console.log('ignore: ' + e.ignore);
+					return !e.ignore;
+				})) {
+
+				DateRange.calculateHeight(e[i][j]);
+			}
+		}
+
+		console.log(JSON.stringify(e));
+
+		return e;
+	}
+
+}
 
 export default {
 	
@@ -229,7 +612,7 @@ export default {
 	data() {
 		return {
 			
-			pages: [ {}, {}, {} ], //start with, prev, current, and next page. Start with loading current ...
+			pages: [ ], //start with, prev, current, and next page. Start with loading current ...
 
 			currentMarginLeft: 0,
 
@@ -246,7 +629,7 @@ export default {
 			viewActive: null, //can be one, seven, four
 			
 			//Automatically populated by default with a map. YYYYMMDD as the object's keys. The values are the events (from this.events).
-			agendaItems: {},
+			//agendaItems: {},
 
 			//Array with elements like {name: String, displayName: String, color: String}
 			calendarInformation: [],
@@ -261,6 +644,8 @@ export default {
 
 			// Last day to show in the current calendar view
 			toDate: null,
+
+			currentPage: null,
 
 			// A range starting from this.fromDate to this.toDate
 			currentRange: null,
@@ -311,68 +696,8 @@ export default {
 
 		//
 		currentAgendaItems: function () {
-			console.log('enabledCalendars');
-			console.log(Object.values(this.enabledCalendars));
-			// (1) First, load the current agenda items
-			var result = {};
-
-			for (let day of this.currentRange.by('days')) {
-				var r = this.agendaItems[day.format('YYYYMMDD')];
-				
-				result[day.format('YYYYMMDD')] = r ? r : [];
-			}
-
-			var e = result;
 			
-			// (2) Prepare presenting
-			for (var i in e) {
-
-				var j = e[i].length
-
-				while (j--) {
-
-					if (e[i][j].style) {
-						delete e[i][j].dataWidth;
-						delete e[i][j].dataLeft;
-						delete e[i][j].style.width;
-						delete e[i][j].style.left;
-					}else{
-						e[i][j].style = {};
-					}
-
-					e[i][j].ignore = false;
-					e[i][j].style.display = 'block';
-
-					if(Object.keys(this.calendarInformation).length > 0){
-						console.log('has calendar information');
-						console.log('Check: ' + e[i][j].calendarName);
-						console.log(this.enabledCalendars);
-						if (this.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
-							console.log('ignore a calendar!');
-							e[i][j].ignore = true;
-							e[i][j].style.display = 'none';
-						} else {
-							e[i][j].style.backgroundColor = this.calendarInformation[e[i][j].calendarName].color;
-						}
-					}else{
-						console.log('no calendar information');
-						console.log(this.calendarInformation);
-					}
-
-				}
-
-			}
-
-			for (var i in e) {
-				this.fixWidthForEventGroup(e[i].filter(function(e) { console.log('ignore: ' + e.ignore); return !e.ignore; }));
-
-				for (var j in e[i].filter(function(e) { console.log('ignore: ' + e.ignore); return !e.ignore; })) {
-
-					this.calculateHeight(e[i][j]);
-				}
-			}
-
-			return e;
+			return this.currentPage != null ? this.currentPage.getAgendaItems() : [];
 
 		}
 	},
@@ -386,12 +711,13 @@ export default {
 			console.log(this.enabledCalendars);
 		}
 
-		this.timelineSlotDuration = this.getScheduleTimestamp('7:30') - this.getScheduleTimestamp('07:00');
-		this.timelineStart = this.getScheduleTimestamp(('0' + this.hourStart).slice(-2) + ':00');
+		this.timelineSlotDuration = DateRange.getScheduleTimestamp('7:30') - DateRange.getScheduleTimestamp('07:00');
+		
+		timelineStart = DateRange.getScheduleTimestamp(('0' + this.hourStart).slice(-2) + ':00');
 
-		this.timelineEnd = this.getScheduleTimestamp(('0' + this.hourEnd).slice(-2) + ':00');
+		timelineEnd = DateRange.getScheduleTimestamp(('0' + this.hourEnd).slice(-2) + ':00');
 
-		this.timelineDuration = this.timelineEnd - this.timelineStart;
+		timelineDuration = timelineEnd - timelineStart;
 
 		if (this.dateStart != null) {
 			this.dateActive = moment(this.dateStart, 'YYYY-MM-DD');
@@ -440,7 +766,17 @@ export default {
 			
 		});
 
-		this.agendaItems = eventsGrouped;
+		//global
+		agendaItems = eventsGrouped;
+
+		//this.currentPage = new DateRange(this.fromDate, this.toDate);
+
+		this.pages = [
+			{ data: new DateRange(this.fromDate, this.toDate) },
+			];
+
+		console.log('has loaded current page!');
+		
 
 	},
 
@@ -493,7 +829,10 @@ export default {
 		},
 
 		setScrollTop: function () {
-			this.$refs.calendar.scrollTop = this.$refs.calendar.scrollHeight * 0.26;
+			
+			//TODO: fix this!
+			//this.$refs.calendar.scrollTop = this.$refs.calendar.scrollHeight * 0.26;
+
 		},
 
 		showDropDown: function () {
@@ -501,6 +840,7 @@ export default {
 		},
 
 		rangeToString: function (fromDate, toDate) {
+
 			let result = null;
 
 			if (fromDate.isSame(toDate, 'day')) {
@@ -535,42 +875,6 @@ export default {
 
 		}, 500),
 
-		calculateHeight: function (event) {
-
-			if (event.dateStart && event.dateEnd) {
-
-				var start = this.getScheduleTimestamp(moment(event.dateStart).format('HH:mm'));
-				var duration = this.getScheduleTimestamp(moment(event.dateEnd).format('HH:mm')) - start;
-
-				var eventTop = 100.0 * (start - this.timelineStart) / this.timelineDuration;
-				var eventHeight = 100.0 * duration / this.timelineDuration;
-
-				if (!event.style) {
-					event.style = {};
-				}
-
-				event.styleClass = [event.calendarName];
-
-				event.style.height = (eventHeight) + '%';
-				event.style.top = (Math.max(0, eventTop)) + '%';
-
-			} else {
-
-			}
-		},
-
-		getScheduleTimestamp: function (time) {
-
-			if (!time) return 0.001;
-
-			//accepts hh:mm format - convert hh:mm to time in minutes
-			time = time.replace(/ /g, '');
-			var timeArray = time.split(':');
-			var timeStamp = parseInt(timeArray[0]) * 60 + parseInt(timeArray[1]);
-
-			return timeStamp;
-		},
-
 		setDateRange: function (fromDate, toDate) {
 
 			console.log('set date range!');
@@ -578,34 +882,38 @@ export default {
 			this.fromDate = fromDate;
 			this.toDate = toDate;
 
-			this.currentRange = moment.range(this.fromDate, this.toDate);
+			this.isLoading = false;;
 
-			this.viewActive = 'view-' + (this.currentRange.diff('days')+1);
+			// this.currentRange = moment.range(this.fromDate, this.toDate);
 
-			var days = Array.from(this.currentRange.by('day'));
+			// this.viewActive = 'view-' + (this.currentRange.diff('days')+1);
 
-			if (days.length == 1) {
-				this.dateActive = fromDate;
-				days = Array.from(moment.range(fromDate.clone().startOf('week'), fromDate.clone().endOf('week')).by('days'));;
-			}
+			// var days = Array.from(this.currentRange.by('day'));
 
-			this.days = days;
+			// if (days.length == 1) {
+			// 	this.dateActive = fromDate;
+			// 	days = Array.from(moment.range(fromDate.clone().startOf('week'), fromDate.clone().endOf('week')).by('days'));;
+			// }
 
-			console.log('days length: ' + days.length);
-			for (var day in days) {
-				console.log('day: ' + day);
-			}
+			// this.days = days;
 
-			this.$emit('newDateRange', fromDate, toDate);
+			// console.log('days length: ' + days.length);
+			// for (var day in days) {
+			// 	console.log('day: ' + day);
+			// }
 
-			this.isLoading = true;	
+			// this.$emit('newDateRange', fromDate, toDate);
 
-			var parent = this;
-			this.loadDateRange(fromDate, toDate).then(function(){
+			// this.isLoading = true;	
 
-				parent.isLoading = false;
+			// var parent = this;
+			// this.loadDateRange(fromDate, toDate).then(function(){
 
-			});
+			// 	parent.isLoading = false;
+
+			// });
+
+			return null;
 
 		},
 
@@ -653,6 +961,7 @@ export default {
 
 			this.template = 'week';
 			this.viewActive = 'seven';
+			
 			this.setDateRange(this.dateActive.clone().startOf('week'), this.dateActive.clone().endOf('week'));
 
 		},
@@ -691,11 +1000,11 @@ export default {
 		},
 
 		getTime: function (date) {
-			console.log('getTime');
-			console.log(date);
+			
+			// return DateRange.getTime(date);
+
 			if (date == null) return null;
 
-			console.log(moment(date).format('HH:mm'));
 			return moment(date).format('HH:mm');
 
 		},
@@ -714,260 +1023,14 @@ export default {
 
 		openModal: function (event) {
 
-			this.currentEvent = event;
+			// this.currentEvent = event;
 
 			this.showModal = true;
 
 			//TODO: find a proper way to open a modal!
 
 
-		},
-
-		fixWidthForEventGroup: function (eventGroup) {
-
-			if (eventGroup == null) return;
-
-			var self = this;
-			var events = eventGroup;
-
-			var overLapSets = [];
-
-			events.forEach(function (event, index) {
-
-				var start = self.getScheduleTimestamp(moment(event.dateStart).format('HH:mm'));
-				var end = self.getScheduleTimestamp(moment(event.dateEnd).format('HH:mm'));
-
-				var overLappingElements = [event];
-
-				var sets = self.calculateOverlap(start, end, events, index + 1);
-				
-				sets.forEach(function (currentValue, index, array) {
-					var set = overLappingElements.concat(currentValue);
-					overLapSets.push(set);
-				});
-				
-
-
-			});
-
-			overLapSets.sort(function (a, b) {
-
-				if (a.length > b.length) {
-					return -1;
-				} else {
-					return 1;
-				}
-
-			});
-
-			overLapSets.forEach(function (currentValue, index, array) {
-
-				var width = 100.0 / currentValue.length;
-
-				var usedRanges = [];
-				var usedWidth = 0;
-
-				//Calculate all used ranges in a certain overlap set
-				currentValue.forEach(function (currentValue, index, array) {
-
-					var left = currentValue.dataLeft;
-					var width = currentValue.dataWidth;
-
-					if (typeof left !== typeof undefined && left !== false) {
-						usedRanges.push([parseFloat(left), parseFloat(left) + parseFloat(width)]);
-					}
-
-				});
-
-				// sort ranges in order of occurences, left to right
-				usedRanges.sort(function (a, b) {
-					if (a[0] < b[0]) {
-						return -1;
-					} else {
-						return 1;
-					}
-
-				});
-
-				var freeRanges = [];
-
-				//find all free ranges
-				for (var i = 0; i < usedRanges.length; i++) {
-
-					var previous = (i == 0) ? 0.0 : usedRanges[i - 1][1];
-
-					var next = usedRanges[i][0];
-
-					if ((next - previous) > 0.0) {
-						freeRanges.push([previous, next]);
-					}
-
-				}
-
-				if (usedRanges.length > 0) {
-					var previous = usedRanges[usedRanges.length - 1][1];
-					var next = 100.0;
-
-					if ((next - previous) > 0.0) {
-						freeRanges.push([previous, next]);
-					}
-				} else {
-					freeRanges.push([0.0, 100.0]);
-				}
-
-				// verdeel de ranges in currentValue.lenght stukken waarbij het grootste stuk niet groter is dan 2x het kleinste stuk
-				var elementsThatNeedSpace = [];
-
-				currentValue.forEach(function (currentValue, index, array) {
-
-					var attr = currentValue.dataWidth;
-
-					if (typeof attr === typeof undefined || attr === false) {
-
-						elementsThatNeedSpace.push(currentValue);
-
-					} else {
-
-						//this element has already been placed
-
-					}
-				});
-
-				//Calculate the number of elements that still require space
-				var spacesNeeded = parseFloat(elementsThatNeedSpace.length);
-
-				//If no element needs space, continue with the next overlap set
-				if (spacesNeeded == 0) {
-					return;
-				}
-
-				var spaces = [];
-
-				//there are 2 or more spaces to populate 2 or more ranges
-
-				// sort free ranges by size, biggest first
-				var rangeCandidates = freeRanges.sort(function (a, b) {
-
-					if (a[1] - a[0] > b[1] - b[0]) {
-						return -1;
-					} else {
-						return 1;
-					}
-
-				});
-
-				//find the largest element
-				var largestSize = rangeCandidates[0][1] - rangeCandidates[0][0];
-
-				//calculate the minimum size of an element, it should not be smaller then necessary
-				var minimumSize = largestSize / spacesNeeded;
-				var totalSize = 0;
-
-				//filter out very small free spaces
-				rangeCandidates = rangeCandidates.filter(function (value) {
-
-					var elementSize = value[1] - value[0];
-
-					if (elementSize >= minimumSize) {
-						totalSize += elementSize;
-						return true;
-					} else {
-						return false;
-					}
-
-				});
-
-				//find the smallest range left
-				var smallestRange = rangeCandidates[rangeCandidates.length - 1];
-
-				//And ensure is not larger then this smallest range
-				var elementSize = Math.min(smallestRange[1] - smallestRange[0], totalSize / spacesNeeded)
-
-				//loop over the range candidates, start with the smallest
-				rangeCandidates.reverse().forEach(function (e, index, array) {
-
-					//how much space do we have?
-					var rangeSize = (e[1] - e[0]);
-
-					//calculate how much elements this space should contain
-					var elementsInRange = 0;
-
-					if (index != (array.length - 1)) {
-						elementsInRange = Math.floor(rangeSize / elementSize);
-					} else {
-						elementsInRange = spacesNeeded;
-					}
-
-					var width = rangeSize / elementsInRange;
-
-					for (var i = 0.0; i < elementsInRange; i++) {
-						spaces.push([e[0] + i * (width), e[0] + (i + 1) * (width)]);
-					}
-
-					spacesNeeded = spacesNeeded - elementsInRange;
-
-				});
-
-				elementsThatNeedSpace.forEach(function (currentValue, index) {
-
-					if (spaces[index]) {
-						var left = spaces[index][0];
-						var width = spaces[index][1] - spaces[index][0];
-
-						currentValue.dataWidth = width;
-						currentValue.dataLeft = left;
-
-						if (!currentValue.style) {
-							currentValue.style = {};
-						}
-
-						currentValue.style.width = 'calc(' + width + '% - 1px)';
-						currentValue.style.left = left + '%';
-
-					}
-
-				});
-
-			});
-		},
-
-		calculateOverlap: function (start, end, events, index) {
-
-			var result = [];
-
-			var max = 0;
-
-			for (var i = index; i < events.length; i++) {
-
-				var other = events[i];
-
-				var otherStart = this.getScheduleTimestamp(this.getTime(other.dateStart));
-				var otherEnd = this.getScheduleTimestamp(this.getTime(other.dateEnd));
-
-				var overlapStart = Math.max(start, otherStart);
-				var overLapEnd = Math.min(end, otherEnd);
-
-				if (start < otherEnd && otherStart < end) {
-
-					var overLappingElements = [other];
-
-					var overlapSets = [];
-
-					overlapSets = overlapSets.concat(this.calculateOverlap(overlapStart, overLapEnd, events, i + 1));
-
-					overlapSets.forEach(function (currentValue, index, array) {
-						result.push(overLappingElements.concat(currentValue));
-					});
-
-					result.push(overLappingElements);
-
-				}
-
-			}
-
-			return result;
-
-		},
+		}
 
 		
 
