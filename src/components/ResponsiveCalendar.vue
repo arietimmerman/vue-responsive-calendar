@@ -55,12 +55,12 @@ The responsive calendar component for vue.js
 		<div class="pages">
 
 		<!-- some are current, some are prev, some are next -->
-		<div v-for="page in pages" class="page" :style="{'marginLeft':currentMarginLeft +'px'}">
+		<div v-for="page in agendaItemPages" class="page" :style="{'marginLeft':currentMarginLeft +'px'}">
 
 		<div class="dayline" :class="[viewActive]">
 			<ul>
 
-				<li class="top-info" v-for="day in days" v-bind:class="{today: day.isSame(today,'day'), selected: day.isSame(dateActive,'day') } ">
+				<li class="top-info" v-for="day in page.days" v-bind:class="{today: day.isSame(today,'day'), selected: day.isSame(dateActive,'day') } ">
 
 					<a class="d-flex mt-1 justify-content-center" @click="setDateRange(day,day)">
 						<span class="p-0 text-center">{{ day.format('dd') }}</span>
@@ -85,7 +85,7 @@ The responsive calendar component for vue.js
 			<div class="events" v-bind:style="{ backgroundImage: backgroundImage, backgroundPosition: backgroundPosition }">
 
 				<ul>
-					<li v-for="(item, key) in page.data.getAgendaItems()" class="events-group" v-bind:class="{today: key == today}" v-bind:style="{ width : (100.0/7.0) + '%'}">
+					<li v-for="(item, key) in page.agendaItems" class="events-group" v-bind:class="{today: key == today}" v-bind:style="{ width : (100.0/7.0) + '%'}">
 
 						<ul>
 							<template v-for="event in item">
@@ -181,12 +181,20 @@ var timelineDuration = null;
 class DateRange {
 
 	constructor(fromData, toDate) {
-		this.fromData = fromData;
-		this.toDate = toDate;
+
+		// debugger;
+
+		this.fromData = fromData.clone();
+		this.toDate = toDate.clone();
 
 		this.count = 0;
 
 		this.currentRange = moment.range(this.fromDate, this.toDate);
+
+		console.log('from Date: ' + this.fromData.format());
+		console.log('Length2: ' + Array.from(this.currentRange.by('day',{ exclusive: false })).length);
+		
+		
 	}
 
 	static getTime(date) {
@@ -477,8 +485,27 @@ class DateRange {
 		});
 	}
 
+	getDays(){
+		
+		var days = Array.from(this.currentRange.by('day'));
+
+
+		console.log('days length: ' + days.length);
+
+		if (days.length == 1) {
+		//	this.dateActive = fromDate;
+			days = Array.from(moment.range(this.fromDate.clone().startOf('week'), this.fromDate.clone().endOf('week')).by('day'));;
+		}
+
+		// this.days = days;
+
+		return days;
+		
+	}
+
 	getAgendaItems() {
 
+		// debugger;
 		this.count++;
 
 		// if(this.count > 1){
@@ -490,7 +517,7 @@ class DateRange {
 		// (1) First, load the current agenda items
 		var e = {};
 
-		for (let day of this.currentRange.by('days')) {
+		for (let day of this.currentRange.by('day')) {
 			var r = agendaItems[day.format('YYYYMMDD')];
 
 			e[day.format('YYYYMMDD')] = r ? r : [];
@@ -613,6 +640,7 @@ export default {
 		return {
 			
 			pages: [ ], //start with, prev, current, and next page. Start with loading current ...
+			agendaItemPages: [ ],
 
 			currentMarginLeft: 0,
 
@@ -771,8 +799,17 @@ export default {
 
 		//this.currentPage = new DateRange(this.fromDate, this.toDate);
 
+		console.log('these dates ...');
+		console.log(this.dateActive.clone().startOf('week').format());
+			console.log(this.dateActive.clone().endOf('week').format());
+
 		this.pages = [
 			{ data: new DateRange(this.fromDate, this.toDate) },
+			];
+
+		this.agendaItemPages = [
+			{ agendaItems: this.pages[0].data.getAgendaItems(), days: this.pages[0].data.getDays()  },
+
 			];
 
 		console.log('has loaded current page!');
@@ -780,7 +817,19 @@ export default {
 
 	},
 
+	watch: {
+		pages: function(val){
+
+			console.log('change of pages');
+
+		}
+	},
 	methods: {
+
+		getAgendaItems: function(page){
+			// debugger;
+			return page.data.getAgendaItems();
+		},
 
 		touchStart: function(evt){
 
@@ -962,6 +1011,8 @@ export default {
 			this.template = 'week';
 			this.viewActive = 'seven';
 			
+			console.log(this.dateActive.clone().startOf('week').format());
+			console.log(this.dateActive.clone().endOf('week').format());
 			this.setDateRange(this.dateActive.clone().startOf('week'), this.dateActive.clone().endOf('week'));
 
 		},
