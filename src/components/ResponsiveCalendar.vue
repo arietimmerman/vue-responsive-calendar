@@ -85,7 +85,7 @@ The responsive calendar component for vue.js
 			<div class="events" v-bind:style="{ backgroundImage: backgroundImage, backgroundPosition: backgroundPosition }">
 
 				<ul>
-					<li v-for="(item, key) in page.agendaItems" class="events-group" v-bind:class="{today: key == today}" v-bind:style="{ width : (100.0/7.0) + '%'}">
+					<li v-for="(item, key) in page.agendaItems" class="events-group" v-bind:class="{today: key == today}" v-bind:style="{ width : (100.0/page.length) + '%'}">
 
 						<ul>
 							<template v-for="event in item">
@@ -180,20 +180,16 @@ var timelineDuration = null;
 // Twee zware operaties: (1) data inladen, (2) berekening breedte/hoogte
 class DateRange {
 
-	constructor(fromData, toDate) {
+	constructor(fromDate, toDate) {
 
 		// debugger;
 
-		this.fromData = fromData.clone();
+		this.fromDate = fromDate.clone();
 		this.toDate = toDate.clone();
 
 		this.count = 0;
 
-		this.currentRange = moment.range(this.fromDate, this.toDate);
-
-		console.log('from Date: ' + this.fromData.format());
-		console.log('Length2: ' + Array.from(this.currentRange.by('day',{ exclusive: false })).length);
-		
+		this.currentRange = moment().range(fromDate, toDate);
 		
 	}
 
@@ -488,17 +484,12 @@ class DateRange {
 	getDays(){
 		
 		var days = Array.from(this.currentRange.by('day'));
-
-
-		console.log('days length: ' + days.length);
-
+		
 		if (days.length == 1) {
 		//	this.dateActive = fromDate;
 			days = Array.from(moment.range(this.fromDate.clone().startOf('week'), this.fromDate.clone().endOf('week')).by('day'));;
 		}
-
-		// this.days = days;
-
+		
 		return days;
 		
 	}
@@ -788,43 +779,44 @@ export default {
 
 			if(!eventsGrouped[date]){
 				eventsGrouped[date] = [];
-			}
-			
-			eventsGrouped[date].push(event);
-			
-		});
+				}
 
-		//global
-		agendaItems = eventsGrouped;
+				eventsGrouped[date].push(event);
 
-		//this.currentPage = new DateRange(this.fromDate, this.toDate);
+				});
 
-		console.log('these dates ...');
-		console.log(this.dateActive.clone().startOf('week').format());
-			console.log(this.dateActive.clone().endOf('week').format());
+				//global
+				agendaItems = eventsGrouped;
 
-		this.pages = [
-			{ data: new DateRange(this.fromDate, this.toDate) },
-			];
+				//this.currentPage = new DateRange(this.fromDate, this.toDate);
 
-		this.agendaItemPages = [
-			{ agendaItems: this.pages[0].data.getAgendaItems(), days: this.pages[0].data.getDays()  },
+				console.log('these dates ...');
+				console.log(this.dateActive.clone().startOf('week').format());
+				console.log(this.dateActive.clone().endOf('week').format());
 
-			];
+				this.pages = [{
+					data: new DateRange(this.dateActive.clone().startOf('week'), this.dateActive.clone().endOf('week'))
+				},];
 
-		console.log('has loaded current page!');
-		
+				this.agendaItemPages = [{
+						agendaItems: this.pages[0].data.getAgendaItems(),
+						days: this.pages[0].data.getDays(),
+						length: Array.from(this.pages[0].data.currentRange.by('day')).length
+					},
+				];
 
-	},
+				console.log('has loaded current page!');
 
-	watch: {
-		pages: function(val){
+				},
 
-			console.log('change of pages');
+				watch: {
+						pages: function (val) {
 
-		}
-	},
-	methods: {
+							console.log('change of pages');
+
+						}
+					},
+					methods: {
 
 		getAgendaItems: function(page){
 			// debugger;
@@ -933,34 +925,30 @@ export default {
 
 			this.isLoading = false;;
 
-			// this.currentRange = moment.range(this.fromDate, this.toDate);
+			this.currentRange = moment().range(this.fromDate, this.toDate);
 
-			// this.viewActive = 'view-' + (this.currentRange.diff('days')+1);
+			// START TEMP
+			this.pages = [{
+					data: new DateRange(fromDate, toDate)
+				},];
 
-			// var days = Array.from(this.currentRange.by('day'));
+				this.agendaItemPages = [{
+						agendaItems: this.pages[0].data.getAgendaItems(),
+						days: this.pages[0].data.getDays(),
+						length: Array.from(this.pages[0].data.currentRange.by('day')).length
+					},
+				];
+			// END TEMP
 
-			// if (days.length == 1) {
-			// 	this.dateActive = fromDate;
-			// 	days = Array.from(moment.range(fromDate.clone().startOf('week'), fromDate.clone().endOf('week')).by('days'));;
-			// }
+			this.viewActive = 'view-' + (this.currentRange.diff('days')+1);			
+			
+			this.$emit('newDateRange', fromDate, toDate);
 
-			// this.days = days;
+			this.loadDateRange(fromDate, toDate).then(function(){
 
-			// console.log('days length: ' + days.length);
-			// for (var day in days) {
-			// 	console.log('day: ' + day);
-			// }
+				parent.isLoading = false;
 
-			// this.$emit('newDateRange', fromDate, toDate);
-
-			// this.isLoading = true;	
-
-			// var parent = this;
-			// this.loadDateRange(fromDate, toDate).then(function(){
-
-			// 	parent.isLoading = false;
-
-			// });
+			});
 
 			return null;
 
@@ -1074,12 +1062,11 @@ export default {
 
 		openModal: function (event) {
 
-			// this.currentEvent = event;
+			this.currentEvent = event;
 
 			this.showModal = true;
 
 			//TODO: find a proper way to open a modal!
-
 
 		}
 
