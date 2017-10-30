@@ -190,7 +190,6 @@
 
 		.pages {
 			flex-grow: 1;
-			background-color: blue;
 			left: 0%;
 			top: 0px;
 			overflow-y: hidden;
@@ -204,14 +203,21 @@
 				display: block;
 				position: absolute;
 				transition: all 500ms ease-out;
+				
+				margin-left: -100%;
 
 				&.notransition {
 					transition: none!important;
 				}
 
-				&.prev{
-					margin-left: -100%;
+				&.current{
+					margin-left: 0%;
 				}
+
+				&.current ~ div{
+					margin-left: 100%;
+				}
+
 			}
 		}
 
@@ -387,6 +393,9 @@
 									margin-bottom: .2em;
 								}
 								.event-name {
+
+									font-weight: bold;
+
 									@include MQ(L) {
 										font-size: $font-size-small;
 									}
