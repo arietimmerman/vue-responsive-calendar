@@ -6,9 +6,10 @@ let timelineDuration  = null;
 
 class DateRange {
 
-    constructor(fromDate, toDate) {
+    constructor(other, fromDate, toDate) {
 
         // debugger;
+        this.other = other;
 
         this.fromDate = fromDate.clone();
         this.toDate = toDate.clone();
@@ -24,7 +25,7 @@ class DateRange {
     }
 
     static init (hourStart, hourEnd) {
-        
+
         timelineSlotDuration = DateRange.getScheduleTimestamp('7:30') - DateRange.getScheduleTimestamp('07:00');
         timelineStart = DateRange.getScheduleTimestamp(('0' + hourStart).slice(-2) + ':00');
         timelineEnd = DateRange.getScheduleTimestamp(('0' + hourEnd).slice(-2) + ':00');
@@ -101,9 +102,6 @@ class DateRange {
             //TODO: fix timelineStart en timelineDuration
             var eventTop = 100.0 * (start - timelineStart) / timelineDuration;
             var eventHeight = 100.0 * duration / timelineDuration;
-            
-            console.log(timelineDuration);
-            console.log('eventHeight: ' + eventHeight);
 
             if (!event.style) {
                 event.style = {};
@@ -371,17 +369,17 @@ class DateRange {
                 e[i][j].ignore = false;
                 e[i][j].style.display = 'block';
 
-                // if (Object.keys(this.calendarInformation).length > 0) {
+                if (Object.keys(this.other.calendarInformation).length > 0) {
 
-                // 	if (this.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
-                // 		e[i][j].ignore = true;
-                // 		e[i][j].style.display = 'none';
-                // 	} else {
-                // 		e[i][j].style.backgroundColor = this.calendarInformation[e[i][j].calendarName].color;
-                // 	}
-                // } else {
+                	if (this.other.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
+                		e[i][j].ignore = true;
+                		e[i][j].style.display = 'none';
+                	} else {
+                		e[i][j].style.backgroundColor = this.other.calendarInformation[e[i][j].calendarName].color;
+                	}
+                } else {
 
-                // }
+                }
 
             }
 

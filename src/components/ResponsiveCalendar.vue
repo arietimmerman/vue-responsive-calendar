@@ -312,8 +312,6 @@ export default {
 
 	created() {
 
-		DateRange.init(this.hourStart, this.hourEnd);
-
 		if (this.initialCalendarInformation) {
 			this.calendarInformation = this.initialCalendarInformation;
 			this.enabledCalendars = Object.keys(this.calendarInformation);
@@ -323,6 +321,7 @@ export default {
 			this.dateActive = moment(this.dateStart, 'YYYY-MM-DD');
 		}
 
+		DateRange.init(this.hourStart, this.hourEnd, this);
 
 		var eventsGrouped = {};
 
@@ -357,9 +356,6 @@ export default {
 		this.$refs.calendarcontainer.addEventListener("touchend", this.touchEnd, false);
 		this.$refs.calendarcontainer.addEventListener("touchleave", this.touchEnd, false);
 		this.$refs.calendarcontainer.addEventListener("touchmove", evt => {			
-
-			console.log('this.activeIndex is now: ' + this.activeIndex);
-
 			this.prevAgendaItemPage.currentMarginLeft = 'calc(-100% + ' + (evt.changedTouches[0].clientX - moveStart) + 'px)';
 			this.nextAgendaItemPage.currentMarginLeft = 'calc(100% + ' + (evt.changedTouches[0].clientX - moveStart) + 'px)';
 			this.currentAgendaItemPage.currentMarginLeft = (evt.changedTouches[0].clientX - moveStart) + 'px';
@@ -372,8 +368,21 @@ export default {
 
 	watch: {
 		// TODO: Watch calendarInformation 
+		calendarInformation: function(val){
+			console.log('calendar information changed!');
+		},
 
-		
+		enabledCalendars: function(val){
+			console.log('enabledCalendars changed!');
+			console.log(val);
+
+			if(this.currentAgendaItemPage.dateRange){
+				this.currentAgendaItemPage.dateRange.setAgendaItems();
+
+				this.agendaItemPages = [this.currentAgendaItemPage];
+			}
+
+		},
 
 	},
 	methods: {
@@ -429,13 +438,17 @@ export default {
 
 		},
 
-		setScrollTop: function () {
+		setScrollTop: function (scrollTop) {
 
 			console.log('set scroll top');
 
 			Array.from(document.getElementsByClassName('calendar')).forEach( e => { 
 				console.log('set scroll top');
-				e.scrollTop = e.scrollHeight * 0.26;
+
+				if(e.scrollTop == 0){
+					e.scrollTop = scrollTop === undefined ? e.scrollHeight * 0.26 : scrollTop;
+				}
+
 			});
 
 		},
@@ -462,7 +475,7 @@ export default {
 		allTimes: function () {
 			var times = [];
 
-			for (var i = this.hourStart; i < this.hourEnd; i++) {
+			for (var i = this.hourStart; i <= this.hourEnd; i++) {
 				times.push(i + 'u');
 				times.push(i + ':30');
 			}
@@ -513,7 +526,7 @@ export default {
 				}else if (fromDate > this.agendaItemPages[i].dateRange.currentRange.start) {
 					
 					newElement = {
-						dateRange: new DateRange(fromDate, toDate),
+						dateRange: new DateRange(this, fromDate, toDate),
 						active: false,
 						currentMarginLeft: null,
 						transition: false
@@ -533,7 +546,7 @@ export default {
 			if (!added) {
 				console.log('add element to the start!');
 				newElement = {
-						dateRange: new DateRange(fromDate, toDate),
+						dateRange: new DateRange(this, fromDate, toDate),
 						active: false,
 						currentMarginLeft: null,
 						transition: false
@@ -552,6 +565,10 @@ export default {
 			}else if(insertedIndex == (this.activeIndex + 1) ){
 				this.nextAgendaItemPage = newElement;
 			}
+
+			this.$nextTick(function () {
+				this.setScrollTop();
+			});
 
 			return newElement;
 		},
@@ -583,8 +600,6 @@ export default {
 						}
 
 						this.setScrollTop();
-
-						//TODO: load next ...
 
 					},0);
 				});
