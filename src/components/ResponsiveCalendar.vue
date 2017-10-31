@@ -163,6 +163,7 @@ window.moment = extendMoment(Moment);
 window.agendaItems = null;
 
 var moveStart = null;
+var moveStartY = null;
 
 export default {
 
@@ -355,10 +356,18 @@ export default {
 		this.$refs.calendarcontainer.addEventListener("touchstart", this.touchStart, false);
 		this.$refs.calendarcontainer.addEventListener("touchend", this.touchEnd, false);
 		this.$refs.calendarcontainer.addEventListener("touchleave", this.touchEnd, false);
-		this.$refs.calendarcontainer.addEventListener("touchmove", evt => {			
-			this.prevAgendaItemPage.currentMarginLeft = 'calc(-100% + ' + (evt.changedTouches[0].clientX - moveStart) + 'px)';
-			this.nextAgendaItemPage.currentMarginLeft = 'calc(100% + ' + (evt.changedTouches[0].clientX - moveStart) + 'px)';
-			this.currentAgendaItemPage.currentMarginLeft = (evt.changedTouches[0].clientX - moveStart) + 'px';
+		this.$refs.calendarcontainer.addEventListener("touchmove", evt => {
+
+			// x moet 4 keer de grote van y zijn, en minimaal 10
+			
+			var moveX = (evt.changedTouches[0].clientX - moveStart);
+			var moveY = (evt.changedTouches[0].clientY - moveStartY);
+
+			if(Math.abs(moveX) > 10 && Math.abs(moveX/moveY) > 4){
+				this.prevAgendaItemPage.currentMarginLeft = 'calc(-100% + ' + (evt.changedTouches[0].clientX - moveStart) + 'px)';
+				this.nextAgendaItemPage.currentMarginLeft = 'calc(100% + ' + (evt.changedTouches[0].clientX - moveStart) + 'px)';
+				this.currentAgendaItemPage.currentMarginLeft = (evt.changedTouches[0].clientX - moveStart) + 'px';
+			}
 
 		}, false);
 
@@ -397,6 +406,7 @@ export default {
 			this.loadNext();
 			
 			moveStart = evt.changedTouches[0].clientX;
+			moveStartY = evt.changedTouches[0].clientY;
 
 			this.prevAgendaItemPage.transition = false;
 			this.nextAgendaItemPage.transition = false;
@@ -414,10 +424,15 @@ export default {
 			this.currentAgendaItemPage.transition = true;
 			this.currentAgendaItemPage.currentMarginLeft = null;
 
-			if( (evt.changedTouches[0].clientX - moveStart) > 50 ){
-				this.prev();
-			}else if( (evt.changedTouches[0].clientX - moveStart) < -50 ){
-				this.next();
+			var moveX = (evt.changedTouches[0].clientX - moveStart);
+			var moveY = (evt.changedTouches[0].clientY - moveStartY);
+
+			if( Math.abs(moveX) > 50 && Math.abs(moveX/moveY) > 4){
+				if( (evt.changedTouches[0].clientX - moveStart) > 50 ){
+					this.prev();
+				}else if( (evt.changedTouches[0].clientX - moveStart) < -50 ){
+					this.next();
+				}
 			}
 
 		},
