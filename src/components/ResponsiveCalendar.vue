@@ -131,7 +131,7 @@ The responsive calendar component for vue.js
 		<span slot="date"></span>
 		<p slot="body">
 
-			<template v-for="calendar in Object.values(calendarInformation)">
+			<template v-for="calendar in getObjectValues(calendarInformation)">
 				<div>
 					<input class="checkbox-custom" type="checkbox" :value="calendar.name" :id="calendar.name" v-model="enabledCalendars" /> 
 					<label :style="{color: calendar.color}" :for="calendar.name" class="checkbox-custom-label"><span style="color: #222222;;">{{ calendar.displayName }}</span></label>
@@ -396,6 +396,10 @@ export default {
 	},
 	methods: {
 
+		getObjectValues: function(v){
+			return _.values(v);
+		},
+
 		animationend: function(e){
 			console.log('animation end!');
 		},
@@ -431,7 +435,7 @@ export default {
 					this.next();
 				}
 			}
-			
+
 			this.$nextTick(function () {
 				this.prevAgendaItemPage.currentMarginLeft = null;
 				this.nextAgendaItemPage.currentMarginLeft = null;
