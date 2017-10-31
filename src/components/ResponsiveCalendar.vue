@@ -418,12 +418,9 @@ export default {
 			
 
 			this.prevAgendaItemPage.transition = true;
-			this.prevAgendaItemPage.currentMarginLeft = null;
 			this.nextAgendaItemPage.transition = true;
-			this.nextAgendaItemPage.currentMarginLeft = null;
 			this.currentAgendaItemPage.transition = true;
-			this.currentAgendaItemPage.currentMarginLeft = null;
-
+			
 			var moveX = (evt.changedTouches[0].clientX - moveStart);
 			var moveY = (evt.changedTouches[0].clientY - moveStartY);
 
@@ -434,6 +431,12 @@ export default {
 					this.next();
 				}
 			}
+			
+			this.$nextTick(function () {
+				this.prevAgendaItemPage.currentMarginLeft = null;
+				this.nextAgendaItemPage.currentMarginLeft = null;
+				this.currentAgendaItemPage.currentMarginLeft = null;
+			});
 
 		},
 
