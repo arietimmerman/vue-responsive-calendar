@@ -343,65 +343,72 @@ class DateRange {
 
         // (1) First, load the current agenda items
         var e = {};
+        
+        console.log('get agendaItems!');
+        
+        this.other.getAgendaItems(this.fromDate,this.toDate).then( (agendaItems) => {
 
-        for (let day of this.currentRange.by('day')) {
-            var r = agendaItems[day.format('YYYYMMDD')];
-
-            e[day.format('YYYYMMDD')] = r ? r : [];
-        }
-
-        // (2) Prepare presenting
-        for (var i in e) {
-
-            var j = e[i].length
-
-            while (j--) {
-
-                if (e[i][j].style) {
-                    delete e[i][j].dataWidth;
-                    delete e[i][j].dataLeft;
-                    delete e[i][j].style.width;
-                    delete e[i][j].style.left;
-                } else {
-                    e[i][j].style = {};
-                }
-
-                e[i][j].ignore = false;
-                e[i][j].style.display = 'block';
-
-                if (Object.keys(this.other.calendarInformation).length > 0) {
-
-                	if (this.other.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
-                		e[i][j].ignore = true;
-                		e[i][j].style.display = 'none';
-                	} else {
-                		e[i][j].style.backgroundColor = this.other.calendarInformation[e[i][j].calendarName].color;
-                	}
-                } else {
-
-                }
-
+            for (let day of this.currentRange.by('day')) {
+                var r = agendaItems[day.format('YYYYMMDD')];
+    
+                e[day.format('YYYYMMDD')] = r ? r : [];
             }
-
-        }
-
-        for (var i in e) {
-
-            DateRange.fixWidthForEventGroup(e[i].filter(function (e) {
-                console.log('ignore: ' + e.ignore);
-                return !e.ignore;
-            }));
-
-            for (var j in e[i].filter(function (e) {
+    
+            // (2) Prepare presenting
+            for (var i in e) {
+    
+                var j = e[i].length
+    
+                while (j--) {
+    
+                    if (e[i][j].style) {
+                        delete e[i][j].dataWidth;
+                        delete e[i][j].dataLeft;
+                        delete e[i][j].style.width;
+                        delete e[i][j].style.left;
+                    } else {
+                        e[i][j].style = {};
+                    }
+    
+                    e[i][j].ignore = false;
+                    e[i][j].style.display = 'block';
+    
+                    if (Object.keys(this.other.calendarInformation).length > 0) {
+    
+                        if (this.other.enabledCalendars.indexOf(e[i][j].calendarName) == -1) {
+                            e[i][j].ignore = true;
+                            e[i][j].style.display = 'none';
+                        } else {
+                            e[i][j].style.backgroundColor = this.other.calendarInformation[e[i][j].calendarName].color;
+                        }
+                    } else {
+    
+                    }
+    
+                }
+    
+            }
+    
+            for (var i in e) {
+    
+                DateRange.fixWidthForEventGroup(e[i].filter(function (e) {
                     console.log('ignore: ' + e.ignore);
                     return !e.ignore;
-                })) {
-
-                DateRange.calculateHeight(e[i][j]);
+                }));
+    
+                for (var j in e[i].filter(function (e) {
+                        console.log('ignore: ' + e.ignore);
+                        return !e.ignore;
+                    })) {
+    
+                    DateRange.calculateHeight(e[i][j]);
+                }
             }
-        }
+    
+            this.agendaItems = e;
 
-        this.agendaItems = e;
+        });
+        
     }
 
 }

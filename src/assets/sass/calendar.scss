@@ -21,6 +21,10 @@
 			background-repeat: no-repeat;
 		}
 
+		a.left-button, a.right-button{
+			border-radius: 50%;
+		}
+
 		a.left-button{
 			background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTc5MiIgaGVpZ2h0PSIxNzkyIiB2aWV3Qm94PSIwIDAgMTc5MiAxNzkyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0xNDI3IDMwMWwtNTMxIDUzMSA1MzEgNTMxcTE5IDE5IDE5IDQ1dC0xOSA0NWwtMTY2IDE2NnEtMTkgMTktNDUgMTl0LTQ1LTE5bC03NDItNzQycS0xOS0xOS0xOS00NXQxOS00NWw3NDItNzQycTE5LTE5IDQ1LTE5dDQ1IDE5bDE2NiAxNjZxMTkgMTkgMTkgNDV0LTE5IDQ1eiIvPjwvc3ZnPg==');
 		}
@@ -53,15 +57,25 @@
 
 			@import './loading';
 		}
-
+		
+		
 		.btn.btn-calendar{
-			background-color: white;
+			background-color: transparent;
+			border-color: transparent;
 			color: #1e1e1e;
 
 			&.btn-active{
 				font-weight: bold;
 				background-color: #C2C2C2;
 			}
+
+			&.btn-dark{
+				background-color: #d3d3d3;
+			}
+		}
+
+		.btn-group{
+			background-color: #d3d3d3;
 		}
 
 		.btn.btn-calendar:hover{

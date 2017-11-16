@@ -8,20 +8,19 @@ The responsive calendar component for vue.js
 <template>
 <div ref="calendarcontainer" class="container h-100 w-100 mw-100 calendar-container" v-bind:class="['max-size-' + this.maxSize.toLowerCase(), isLoading ? 'isLoading' : '' ]">
 
-	<div class="d-flex justify-content-between align-items-center menu">
+	<div class="d-flex justify-content-between align-items-center menu ml-2 mr-2">
 		
 		<!-- Buttons top left -->
 		<div>
-			<a class="btn btn-secondary btn-calendar btn-sm" @click="showToday"> 
+			<a class="btn btn-secondary btn-calendar btn-sm btn-dark" @click="showToday"> 
 				{{ today.format('D') }}
 			</a>
 
-			<div class="btn-group" role="group" aria-label="Basic example">
+			
 
-				<a class="btn btn-secondary btn-calendar btn-sm ml-1 left-button" @click="prev"> </a>
-				<a class="btn btn-secondary btn-calendar btn-sm right-button" @click="next"></a>
+			<a class="btn btn-secondary btn-calendar btn-sm ml-1 left-button" @click="prev"></a><a class="btn btn-secondary btn-calendar btn-sm right-button" @click="next"></a>
 
-			</div>
+		
 
 			<p class="date-range ml-2 hidden show-m-size">{{ rangeToString(fromDate, toDate) }}</p>
 
@@ -35,9 +34,9 @@ The responsive calendar component for vue.js
 			</button>
 
 			<div class="btn-group pull-right" role="group" aria-label="Basic example">
-				<a class="btn btn-secondary btn-calendar btn-sm" :class="{'btn-active': this.viewActive == 'view-1'}" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">{{ i18n.day }}</span></a>
-				<a class="btn btn-secondary btn-calendar btn-sm" :class="{'btn-active': this.viewActive == 'view-7'}" @click="showWeek">{{ i18n.week }}</a>
-				<a class="btn btn-secondary btn-calendar btn-sm" :class="{'btn-active': this.viewActive == 'view-4'}" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">{{ i18n.days4 }}</span></a>
+				<a class="btn btn-secondary btn-calendar btn-sm btn-dark" :class="{'btn-active': this.viewActive == 'view-1'}" @click="showOneDay"><span class="hidden-m-size">1</span><span class="hidden show-m-size">{{ i18n.day }}</span></a>
+				<a class="btn btn-secondary btn-calendar btn-sm btn-dark" :class="{'btn-active': this.viewActive == 'view-7'}" @click="showWeek">{{ i18n.week }}</a>
+				<a class="btn btn-secondary btn-calendar btn-sm btn-dark" :class="{'btn-active': this.viewActive == 'view-4'}" @click="showFourDay"><span class="hidden-m-size">4</span><span class="hidden show-m-size">{{ i18n.days4 }}</span></a>
 			</div>
 
 		</div>
@@ -160,7 +159,8 @@ import Modal from './Modal.vue'
 import DateRange from '../assets/js/DataRange.js'
 
 window.moment = extendMoment(Moment);
-window.agendaItems = null;
+
+var agendaItems = null;
 
 var moveStart = null;
 var moveStartY = null;
@@ -385,6 +385,7 @@ export default {
 			console.log('enabledCalendars changed!');
 			console.log(val);
 
+			//TODO: Make this more efficient
 			if(this.currentAgendaItemPage.dateRange){
 				this.currentAgendaItemPage.dateRange.setAgendaItems();
 
@@ -395,6 +396,14 @@ export default {
 
 	},
 	methods: {
+
+		getAgendaItems: function(fromDate, toDate){
+
+			return new Promise( (resolve, reject) => {
+				resolve(agendaItems);
+			});
+			
+		},
 
 		getObjectValues: function(v){
 			return _.values(v);
@@ -526,8 +535,6 @@ export default {
 
 		insertDateRange: function (fromDate, toDate) {
 			
-			//FIXME: Only do 'new DateRange' when needed ...
-
 			var newElement = null;
 
 			var insertedIndex = null;
@@ -766,7 +773,7 @@ export default {
 		},
 
 		openModal: function (event) {
-
+			
 			this.currentEvent = event;
 
 			this.showModal = true;
