@@ -383,7 +383,6 @@ export default {
 
 		enabledCalendars: function(val){
 			console.log('enabledCalendars changed!');
-			console.log(val);
 
 			//TODO: Make this more efficient
 			if(this.currentAgendaItemPage.dateRange){
@@ -573,7 +572,7 @@ export default {
 			}
 
 			if (!added) {
-				console.log('add element to the start!');
+				
 				newElement = {
 						dateRange: new DateRange(this, fromDate, toDate),
 						active: false,
@@ -664,7 +663,7 @@ export default {
 
 		loadDateRange: function (fromDate, toDate) {
 
-			console.log('in loadDateRange');
+			console.log('in loadDateRange default');
 
 			return new Promise(function (resolve, reject) {
 				resolve('done');

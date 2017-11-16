@@ -7,7 +7,7 @@ let timelineDuration  = null;
 class DateRange {
 
     constructor(other, fromDate, toDate) {
-
+        console.log('new DateRange');
         // debugger;
         this.other = other;
 
@@ -340,12 +340,16 @@ class DateRange {
     }
 
     setAgendaItems() {
-
+        
+        console.log('in setAgendaItems');
         // (1) First, load the current agenda items
         var e = {};
         
         console.log('get agendaItems!');
-        
+
+
+        console.log('get Other agenda items');
+
         this.other.getAgendaItems(this.fromDate,this.toDate).then( (agendaItems) => {
 
             for (let day of this.currentRange.by('day')) {
