@@ -174,7 +174,10 @@ export default {
 
 	props: {
 
-		//TODO: introduce start of week
+		forceMondayFirst: {
+			type: Boolean,
+			default: false
+		},
 
 		initialCalendarInformation: {
 			type: Array,
@@ -371,7 +374,7 @@ export default {
 
 		}, false);
 
-		this.insertDateRange(this.dateActive.clone().startOf('week'), this.dateActive.clone().endOf('week'));
+		this.insertDateRange(this.getStartOfWeek(dateActive), this.getEndOfWeek(dateActive));
 
 	},
 
@@ -674,7 +677,7 @@ export default {
 		showToday: function () {
 
 			if (this.size == 7) {
-				this.showDateRange(this.today.clone().startOf('week'), this.today.clone().endOf('week'));
+				this.showDateRange(this.getStartOfWeek(this.today), this.getStartOfWeek(this.today));
 			} else {
 
 				if(this.size == 1){
@@ -711,7 +714,7 @@ export default {
 
 			this.agendaItemPages = [];
 
-			this.showDateRange(this.dateActive.clone().startOf('week'), this.dateActive.clone().endOf('week'));
+			this.showDateRange(this.getStartOfWeek(this.dateActive), this.getEndOfWeek(this.dateActive));
 
 		},
 
@@ -757,6 +760,14 @@ export default {
 
 			return moment(date).format('HH:mm');
 
+		},
+
+		getStartOfWeek: function (date) {
+			return this.forceMondayFirst ? date.clone().startOf('isoWeek') : date.clone().startOf('week');
+		},
+
+		getEndOfWeek: function (date) {
+			return this.forceMondayFirst ? date.clone().endOf('isoWeek') : date.clone().endOf('week');
 		},
 
 		getDay: function (date, format) {

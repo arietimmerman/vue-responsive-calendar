@@ -29,7 +29,7 @@ It's also available on unpkg: https://unpkg.com/vue-responsive-calendar
 
 <div id="app">
 
-    <responsive-calendar max-size="l" :events="events"></responsive-calendar>
+    <responsive-calendar force-monday-first="true" max-size="l" :events="events"></responsive-calendar>
 
 </div>
 
