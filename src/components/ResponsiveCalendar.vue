@@ -116,12 +116,14 @@ The responsive calendar component for vue.js
 		<h3 slot="header">{{ currentEvent.summary ? currentEvent.summary : currentEvent.item.summary }}</h3>
 
 		<p slot="body">{{ currentEvent.description }}</p>
-		<!--
+		
 		<span slot="date">{{ getTime(currentEvent.dateStart) }} - {{ getTime(currentEvent.dateEnd) }}</span>
 		<span slot="location">{{ currentEvent.location }}</span>
 
-		<span @click="showModal = false; showCalendarPicker = true;" slot="calendar" v-if="currentEvent.calendarName"><span class="badge badge-pill badge-primary" :style="{'backgroundColor': getCalendarInformation(currentEvent.calendarName).color }">{{ getCalendarInformation(currentEvent.calendarName).displayName }}</span></span>
-		-->
+		<!--
+			<span @click="showModal = false; showCalendarPicker = true;" slot="calendar" v-if="currentEvent.calendarName"><span class="badge badge-pill badge-primary" :style="{'backgroundColor': getCalendarInformation(currentEvent.calendarName).color }">{{ getCalendarInformation(currentEvent.calendarName).displayName }}</span></span>
+		-->	
+		
 	</modal-detail>
 
 	<modal-detail v-if="showCalendarPicker" @close="showCalendarPicker = false">
@@ -180,7 +182,7 @@ export default {
 		},
 
 		initialCalendarInformation: {
-			type: Array,
+			type: Object,
 			default: null
 		},
 
@@ -258,7 +260,7 @@ export default {
 			//agendaItems: {},
 
 			//Array with elements like {name: String, displayName: String, color: String}
-			calendarInformation: [],
+			calendarInformation: {},
 
 			//Sets the calendars that should be enabled
 			enabledCalendars: [],
@@ -319,6 +321,8 @@ export default {
 		if (this.initialCalendarInformation) {
 			this.calendarInformation = this.initialCalendarInformation;
 			this.enabledCalendars = Object.keys(this.calendarInformation);
+
+			console.log('set this.enabledCalendars');
 		}
 
 		if (this.dateStart != null) {
@@ -374,7 +378,7 @@ export default {
 
 		}, false);
 
-		this.insertDateRange(this.getStartOfWeek(dateActive), this.getEndOfWeek(dateActive));
+		this.insertDateRange(this.getStartOfWeek(this.dateActive), this.getEndOfWeek(this.dateActive));
 
 	},
 

@@ -1,18 +1,16 @@
 var merge = require('webpack-merge')
 var base = require('./webpack.config.base')
-var demo = require('./webpack.config.demo')
 var path = require('path')
 
 var outputFile = 'vue-responsive-calendar'
 var globalName = 'VueResponsiveCalendar'
 
-module.exports = [demo,merge(base, {
+module.exports = merge(base, {
+  entry: './src/demo/index.js',
   output: {
     path: path.resolve(__dirname, '../dist'),
-    filename: outputFile + '.browser.js',
+    filename: outputFile + '.demo.browser.js',
     publicPath: "/dist/",
-    library: globalName,
-    libraryTarget: 'umd',
   },
   devtool: 'eval-source-map',
-})];
+});
