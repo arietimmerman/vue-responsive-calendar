@@ -1,3 +1,6 @@
+//TODO: Only use polyfill if needed
+import "babel-polyfill";
+
 import Moment from 'moment';
 
 import {

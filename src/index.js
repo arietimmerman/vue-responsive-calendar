@@ -1,4 +1,3 @@
-
 import ResponsiveCalendar from './components/ResponsiveCalendar.vue';
 import Modal from './components/Modal.vue';
 
