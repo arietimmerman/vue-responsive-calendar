@@ -512,7 +512,7 @@ export default {
 		allTimes: function () {
 			var times = [];
 
-			for (var i = this.hourStart; i <= this.hourEnd; i++) {
+			for (var i = this.hourStart; i < (this.hourEnd); i++) {
 				times.push(i + 'u');
 				times.push(i + ':30');
 			}
