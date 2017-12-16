@@ -1,17 +1,14 @@
+//TODO: Only use polyfill if needed
+import "babel-polyfill";
 
 import Vue from 'vue';
-import Demo from './Demo.vue';
+import vueApp from './App.vue'
+
 import ResponsiveCalendar from '../index';
+
+
 Vue.use(ResponsiveCalendar);
 
-new Vue({
 
-  el: '#app',
+new Vue(vueApp).$mount('#app')
 
-  render: h => h(Demo),  
-
-  mounted: function () {
-    console.log('mounted!');
-  },
-  
-});
